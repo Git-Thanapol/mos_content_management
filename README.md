@@ -163,6 +163,21 @@ This pulls the latest code, rebuilds the image, and restarts containers with zer
 
 ---
 
+### Restarting Gunicorn
+
+```bash
+cd /srv/mos-cms
+docker compose -f docker-compose.prod.yml restart mos-web
+```
+
+If you pulled new code and need a full rebuild:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+---
+
 ### Architecture overview
 
 ```
