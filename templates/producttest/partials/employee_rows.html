@@ -1,0 +1,35 @@
+{% for emp in employees %}
+<tr>
+    <td class="ps-3 fw-bold">{{ emp.name }}</td>
+    <td class="text-center">
+        {% if emp.is_graphic %}<i class="fa-solid fa-check text-success"></i>{% else %}<i class="fa-solid fa-minus text-muted"></i>{% endif %}
+    </td>
+    <td class="text-center">
+        {% if emp.is_mkt %}<i class="fa-solid fa-check text-success"></i>{% else %}<i class="fa-solid fa-minus text-muted"></i>{% endif %}
+    </td>
+    <td class="text-center">
+        {% if emp.is_active %}
+        <span class="badge bg-success-subtle text-success border border-success-subtle">ใช้งาน</span>
+        {% else %}
+        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">ปิดการใช้งาน</span>
+        {% endif %}
+    </td>
+    <td class="text-center d-flex gap-1 justify-content-center">
+        <button class="btn btn-sm btn-outline-secondary px-2"
+                hx-get="{% url 'employee_edit' emp.pk %}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML">
+            <i class="fa-solid fa-pen-to-square fa-sm"></i>
+        </button>
+        <button class="btn btn-sm {% if emp.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %} px-2"
+                hx-post="{% url 'employee_toggle' emp.pk %}"
+                hx-target="#employee-rows"
+                hx-swap="innerHTML"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+            <i class="fa-solid {% if emp.is_active %}fa-ban{% else %}fa-check{% endif %} fa-sm"></i>
+        </button>
+    </td>
+</tr>
+{% empty %}
+<tr><td colspan="5" class="text-center py-4 text-muted">ไม่มีพนักงาน</td></tr>
+{% endfor %}

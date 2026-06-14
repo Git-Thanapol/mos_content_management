@@ -1,0 +1,81 @@
+<!-- Read-only PAGE viewer — mirrors mockup's view-page-modal -->
+<div class="modal fade" id="pagesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg" style="max-width:680px">
+        <div class="modal-content" style="border-radius:1rem;overflow:hidden">
+            <div class="d-flex justify-content-between align-items-center p-3" style="background:#0f172a;color:white">
+                <h6 class="mb-0 fw-bold" style="font-size:.85rem">
+                    <i class="fa-brands fa-facebook me-2"></i>รายการข้อมูล PAGE
+                </h6>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal" style="font-size:.65rem"></button>
+            </div>
+
+            <div class="p-4">
+                <!-- Column headers -->
+                <div class="row g-3 mb-2 px-1">
+                    <div class="col-6" style="font-size:.65rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">
+                        PAGE (ชื่อแคมเปญ)
+                    </div>
+                    <div class="col-6" style="font-size:.65rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">
+                        URL (ลิงก์)
+                    </div>
+                </div>
+
+                <div style="max-height:320px;overflow-y:auto" class="d-flex flex-column gap-2">
+                    {% for pg in pages %}
+                    <div class="row g-2">
+                        <!-- PAGE name -->
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between align-items-center px-3 py-2 rounded-3"
+                                 style="background:#f8fafc;border:1px solid #e2e8f0">
+                                <span class="fw-bold text-truncate pe-2" style="font-size:.8rem;color:#334155">{{ pg.page|default:"-" }}</span>
+                                <button type="button" class="btn btn-sm p-0 border-0 ms-1 flex-shrink-0"
+                                        style="background:none;color:#94a3b8;transition:color .15s"
+                                        onmouseover="this.style.color='#2563eb'"
+                                        onmouseout="this.style.color='#94a3b8'"
+                                        onclick="copyText('{{ pg.page|escapejs }}')"
+                                        title="คัดลอก PAGE">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- URL -->
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between align-items-center px-3 py-2 rounded-3"
+                                 style="background:#f8fafc;border:1px solid #e2e8f0">
+                                <a href="{{ pg.url }}" target="_blank"
+                                   class="text-truncate pe-2"
+                                   style="font-size:.75rem;color:#2563eb;text-decoration:none;max-width:calc(100% - 28px)"
+                                   onmouseover="this.style.textDecoration='underline'"
+                                   onmouseout="this.style.textDecoration='none'">
+                                    {{ pg.url|default:"-" }}
+                                </a>
+                                <button type="button" class="btn btn-sm p-0 border-0 ms-1 flex-shrink-0"
+                                        style="background:none;color:#94a3b8;transition:color .15s"
+                                        onmouseover="this.style.color='#2563eb'"
+                                        onmouseout="this.style.color='#94a3b8'"
+                                        onclick="copyText('{{ pg.url|escapejs }}')"
+                                        title="คัดลอก URL">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4" style="color:#94a3b8;font-size:.8rem">ไม่มีข้อมูล PAGE</div>
+                    {% endfor %}
+                </div>
+
+                <div class="pt-3 mt-2 text-end" style="border-top:1px solid #f1f5f9">
+                    <button class="btn btn-sm fw-bold" data-bs-dismiss="modal"
+                            style="background:#f1f5f9;color:#475569;font-size:.75rem">ปิดหน้าต่าง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function copyText(text) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => showToast('คัดลอก: ' + text));
+}
+</script>

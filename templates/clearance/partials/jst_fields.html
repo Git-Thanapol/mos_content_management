@@ -1,0 +1,27 @@
+{% if info and code %}
+<div class="rounded-3 p-3 mb-1" style="background:#f8fafc;border:1px solid #e2e8f0">
+    <div class="row g-2" style="font-size:.8rem">
+        <div class="col-12">
+            <span class="text-muted">ชื่อสินค้า:</span>
+            <strong class="ms-1">{{ info.name }}</strong>
+        </div>
+        <div class="col-6 col-sm-4">
+            <span class="text-muted">สต็อกคงเหลือ:</span>
+            <strong class="ms-1 {% if info.stock != '-' %}text-dark{% else %}text-muted{% endif %}">{{ info.stock }}</strong>
+        </div>
+        <div class="col-6 col-sm-4">
+            <span class="text-muted">ต้นทุน (Landed):</span>
+            <strong class="ms-1">{% if info.cost != '-' %}{{ info.cost|floatformat:2 }} ฿{% else %}-{% endif %}</strong>
+        </div>
+        <div class="col-6 col-sm-4">
+            <span class="text-muted">สั่งซื้อล่าสุด:</span>
+            <strong class="ms-1">{% if info.last_order_date %}{{ info.last_order_date|date:"d/m/Y" }}{% else %}-{% endif %}</strong>
+        </div>
+    </div>
+</div>
+{% elif code %}
+<div class="rounded-3 p-2 mb-1 text-muted" style="background:#fff8f0;border:1px solid #fed7aa;font-size:.8rem">
+    <i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>
+    ไม่พบ "{{ code }}" ในระบบ JST หรือ JST ไม่พร้อมใช้งาน
+</div>
+{% endif %}

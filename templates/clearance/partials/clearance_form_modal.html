@@ -1,0 +1,139 @@
+<div class="modal fade" id="clearanceFormModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <!-- Header -->
+            <div class="modal-header text-white border-0" style="background:#7f1d1d">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0">
+                        <i class="fa-solid fa-tags me-2"></i>
+                        {% if instance %}แก้ไข: {{ instance.product_code }}{% else %}เพิ่มสินค้าโล๊ะ (Clearance){% endif %}
+                    </h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Form -->
+            <form method="post"
+                  action="{% if instance %}{% url 'clearance:clearance_edit' instance.pk %}{% else %}{% url 'clearance:clearance_add' %}{% endif %}"
+                  hx-post="{% if instance %}{% url 'clearance:clearance_edit' instance.pk %}{% else %}{% url 'clearance:clearance_add' %}{% endif %}"
+                  hx-target="#modal-container"
+                  hx-swap="innerHTML">
+                {% csrf_token %}
+
+                <div class="modal-body px-4 py-3">
+
+                    <!-- JST SKU search (add mode only) -->
+                    {% if not instance %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">ค้นหาสินค้าจากระบบ JST</label>
+                        <input type="text" id="jst-search-input"
+                               name="q"
+                               class="form-control form-control-sm"
+                               placeholder="พิมพ์รหัสหรือชื่อสินค้า..."
+                               autocomplete="off"
+                               hx-get="{% url 'clearance:jst_search' %}"
+                               hx-target="#jst-results"
+                               hx-swap="innerHTML"
+                               hx-trigger="keyup changed delay:350ms"
+                               hx-include="this">
+                        <div id="jst-results" class="border rounded bg-white shadow-sm mt-1"
+                             style="max-height:180px;overflow-y:auto;position:relative;z-index:9999;display:none">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- JST read-only info box -->
+                    <div id="jst-info-box" class="mb-3">
+                        {% if jst_info %}
+                            {% include "clearance/partials/jst_fields.html" with info=jst_info code=instance.product_code %}
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Product code -->
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">รหัสสินค้า (JST) *</label>
+                            {{ form.product_code }}
+                            {{ form.product_name }}
+                        </div>
+                        <!-- Status -->
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">สถานะ</label>
+                            {{ form.status }}
+                        </div>
+                        <!-- Assignee -->
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">ผู้รับผิดชอบ</label>
+                            {{ form.assignee }}
+                        </div>
+                        <!-- Process date -->
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">วันที่ดำเนินการ</label>
+                            {{ form.process_date }}
+                        </div>
+                        <!-- Done date -->
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">วันที่เรียบร้อย</label>
+                            {{ form.done_date }}
+                        </div>
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger mt-3 py-2 small">
+                        {% for field, errors in form.errors.items %}
+                        {% for error in errors %}<div>{{ error }}</div>{% endfor %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm fw-bold" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-sm fw-bold text-white" style="background:#ef4444">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // Show/hide results dropdown
+    const resultsEl = document.getElementById('jst-results');
+    if (!resultsEl) return;
+
+    // When HTMX swaps results in, show the dropdown
+    resultsEl.addEventListener('htmx:afterSwap', () => {
+        resultsEl.style.display = resultsEl.innerHTML.trim() ? 'block' : 'none';
+    });
+
+    // Also listen on body since htmx fires on the target
+    document.body.addEventListener('htmx:afterSettle', function(e) {
+        if (e.target.id === 'jst-results') {
+            resultsEl.style.display = resultsEl.innerHTML.trim() ? 'block' : 'none';
+        }
+    });
+})();
+
+const jstFieldsUrl = "{% url 'clearance:jst_fields' %}";
+
+function selectJstProduct(code, name) {
+    const codeInput = document.getElementById('id_product_code');
+    const nameInput = document.getElementById('id_product_name');
+    const resultsEl = document.getElementById('jst-results');
+    const searchEl = document.getElementById('jst-search-input');
+
+    if (codeInput) codeInput.value = code;
+    if (nameInput) nameInput.value = name;
+    if (resultsEl) { resultsEl.innerHTML = ''; resultsEl.style.display = 'none'; }
+    if (searchEl) searchEl.value = '';
+
+    // Load read-only JST info
+    htmx.ajax('GET', jstFieldsUrl + '?code=' + encodeURIComponent(code), {
+        target: '#jst-info-box',
+        swap: 'innerHTML'
+    });
+}
+</script>

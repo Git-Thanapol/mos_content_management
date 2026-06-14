@@ -1,0 +1,39 @@
+name: mos-cms
+
+services:
+  mos-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: producttest
+      POSTGRES_USER: producttest
+      POSTGRES_PASSWORD: producttest
+    volumes:
+      - mos-pgdata:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"   # 5434 on host — avoids clash with local 5432 and JST 5433
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U producttest"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mos-web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - .:/app
+      - mos-media:/app/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      mos-db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  mos-pgdata:
+  mos-media:

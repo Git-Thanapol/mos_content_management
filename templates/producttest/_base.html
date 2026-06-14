@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load producttest_tags %}
+
+{% block subnav %}
+<nav class="navbar navbar-expand navbar-light border-bottom px-3 py-0" style="background:#1e1b4b;min-height:40px">
+    <ul class="navbar-nav flex-row gap-1">
+        <li class="nav-item">
+            <a class="nav-link px-3 py-2 text-white {% if request.resolver_match.url_name == 'product_list' %}active fw-bold{% endif %}"
+               style="font-size:.8rem"
+               href="{% url 'product_list' %}">
+                <i class="fa-solid fa-list-check me-1"></i>รายการทดสอบ
+            </a>
+        </li>
+        {% if request.user|is_supervisor_filter %}
+        <li class="nav-item">
+            <a class="nav-link px-3 py-2 text-white {% if request.resolver_match.url_name == 'supervisor' %}active fw-bold{% endif %}"
+               style="font-size:.8rem"
+               href="{% url 'supervisor' %}">
+                <i class="fa-solid fa-user-shield me-1"></i>หัวหน้า
+            </a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+            <a class="nav-link px-3 py-2 text-white {% if request.resolver_match.url_name == 'personal_report' %}active fw-bold{% endif %}"
+               style="font-size:.8rem"
+               href="{% url 'personal_report' %}">
+                <i class="fa-solid fa-chart-user me-1"></i>รายงาน
+            </a>
+        </li>
+    </ul>
+    <!-- Supervisor badge -->
+    <div class="ms-auto me-2">
+        <span class="badge {% if request.user|is_supervisor_filter %}bg-warning text-dark{% else %}bg-primary{% endif %}" style="font-size:.65rem">
+            <i class="fa-solid fa-circle me-1" style="font-size:.4rem"></i>
+            {% if request.user|is_supervisor_filter %}หัวหน้างาน{% else %}พนักงาน{% endif %}
+        </span>
+    </div>
+</nav>
+{% endblock %}

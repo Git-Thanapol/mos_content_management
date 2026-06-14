@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block subnav %}
+<nav class="navbar navbar-expand navbar-dark border-bottom px-3 py-0" style="background:#3730a3;min-height:40px">
+    <ul class="navbar-nav flex-row gap-1">
+        <li class="nav-item">
+            <a class="nav-link px-3 py-2 text-white {% if request.resolver_match.url_name == 'queue_list' %}active fw-bold{% endif %}"
+               style="font-size:.8rem"
+               href="{% url 'graphicqueue:queue_list' %}">
+                <i class="fa-solid fa-paintbrush me-1"></i>คิวงานกราฟฟิก
+            </a>
+        </li>
+    </ul>
+    <div class="ms-auto me-2">
+        <span class="badge small" style="background:#4338ca;font-size:.65rem">
+            <i class="fa-solid fa-circle me-1" style="font-size:.4rem"></i>
+            โหมดจัดการคิวงาน
+        </span>
+    </div>
+</nav>
+{% endblock %}

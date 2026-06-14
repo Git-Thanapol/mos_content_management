@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clearance System - ระบบจัดการสินค้าโล๊ะ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Prompt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <!-- ==================== LOCK SCREEN (PASSCODE GATE) ==================== -->
+    <div id="lock-screen" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center border border-slate-100">
+            <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 border border-rose-100 shadow-inner">
+                <i class="fa-solid fa-tags text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">ระบบจัดการสินค้าโล๊ะ</h2>
+            <p class="text-sm text-slate-500 mb-6 font-medium">กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบจัดการรายการสินค้า Clearance</p>
+            
+            <div class="space-y-4">
+                <input type="password" id="gate-passcode" maxlength="4" placeholder="รหัสผ่าน 4 หลัก" class="w-full text-center text-3xl tracking-[0.5em] font-bold text-slate-800 bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-100 transition-all">
+                <div id="gate-error" class="hidden text-xs text-rose-500 font-bold bg-rose-50 py-2 rounded-xl border border-rose-100">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i>รหัสผ่านไม่ถูกต้อง
+                </div>
+                
+                <button onclick="unlockClearanceSystem()" class="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-bold text-lg rounded-2xl shadow-lg shadow-rose-200 transition-all transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-unlock-keyhole mr-2"></i> เข้าสู่ระบบ
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 mt-6"><i class="fa-solid fa-circle-info mr-1"></i> รหัสผ่านเริ่มต้นคือ <span class="font-bold text-slate-600">6789</span></p>
+        </div>
+    </div>
+
+
+    <!-- ==================== MAIN HEADER NAVIGATION ==================== -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-rose-500 text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
+                        <i class="fa-solid fa-tags text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Clearance Products</h1>
+                        <span class="text-[11px] text-slate-500 font-medium block">ระบบจัดการรายการสินค้าโล๊ะและโปรโมชั่นพิเศษ</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="text-right hidden sm:block">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200 transition-all">
+                            <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                            เจ้าหน้าที่คลังสินค้า
+                        </span>
+                    </div>
+                    <button onclick="lockSystemAction()" class="bg-slate-100 p-2.5 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors" title="ล็อกระบบและออกจากระบบ">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- ==================== MAIN DASHBOARD: CLEARANCE ==================== -->
+    <div id="system-clearance-container" class="hidden flex-grow flex flex-col">
+        <main class="flex-grow max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+            <!-- CLEARANCE STATS BAR -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- ทั้งหมด -->
+                <button onclick="setClearanceStatusFilter('ALL')" id="clearance-stat-all" class="flex items-center justify-between p-5 bg-slate-600 text-white rounded-2xl shadow-sm hover:scale-[1.01] transition-all border-2 border-transparent">
+                    <div>
+                        <span class="text-xs font-semibold opacity-80 uppercase tracking-wider block">ทั้งหมด (โล๊ะ)</span>
+                        <span id="clearance-count-all" class="text-3xl font-bold mt-1 block">0</span>
+                    </div>
+                    <div class="text-4xl opacity-20"><i class="fa-solid fa-list"></i></div>
+                </button>
+
+                <!-- รอดำเนินการ -->
+                <button onclick="setClearanceStatusFilter('รอดำเนินการ')" id="clearance-stat-waiting" class="flex items-center justify-between p-5 bg-indigo-500 text-white rounded-2xl shadow-sm hover:scale-[1.01] transition-all border-2 border-transparent">
+                    <div>
+                        <span class="text-xs font-semibold opacity-90 uppercase tracking-wider block">รอดำเนินการ</span>
+                        <span id="clearance-count-waiting" class="text-3xl font-bold mt-1 block">0</span>
+                    </div>
+                    <div class="text-4xl opacity-20"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                </button>
+
+                <!-- กำลังดำเนินการ -->
+                <button onclick="setClearanceStatusFilter('กำลังดำเนินการ')" id="clearance-stat-progress" class="flex items-center justify-between p-5 bg-amber-500 text-white rounded-2xl shadow-sm hover:scale-[1.01] transition-all border-2 border-transparent">
+                    <div>
+                        <span class="text-xs font-semibold opacity-90 uppercase tracking-wider block">กำลังดำเนินการ</span>
+                        <span id="clearance-count-progress" class="text-3xl font-bold mt-1 block">0</span>
+                    </div>
+                    <div class="text-4xl opacity-20"><i class="fa-solid fa-hourglass-half"></i></div>
+                </button>
+
+                <!-- เรียบร้อย -->
+                <button onclick="setClearanceStatusFilter('เรียบร้อย')" id="clearance-stat-done" class="flex items-center justify-between p-5 bg-emerald-500 text-white rounded-2xl shadow-sm hover:scale-[1.01] transition-all border-2 border-transparent">
+                    <div>
+                        <span class="text-xs font-semibold opacity-90 uppercase tracking-wider block">เรียบร้อย</span>
+                        <span id="clearance-count-done" class="text-3xl font-bold mt-1 block">0</span>
+                    </div>
+                    <div class="text-4xl opacity-20"><i class="fa-solid fa-circle-check"></i></div>
+                </button>
+            </section>
+
+            <!-- Controls Panel -->
+            <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200 mb-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="relative w-full sm:w-72">
+                    <input type="text" id="clearance-search-input" onkeyup="applyClearanceFilters()" placeholder="ค้นหารหัส หรือชื่อสินค้าโล๊ะ..." class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 pl-9 focus:ring-rose-500 focus:border-rose-500 outline-none transition-all">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </div>
+                </div>
+                <button onclick="openAddClearanceModal()" class="w-full sm:w-auto bg-rose-500 hover:bg-rose-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>เพิ่มสินค้าโล๊ะ (Clearance)</span>
+                </button>
+            </div>
+
+            <!-- Clearance Table Container -->
+            <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-max">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-4 px-4 w-12 text-center">เลือก</th>
+                                <th class="py-4 px-4 w-24">รหัสสินค้า</th>
+                                <th class="py-4 px-4 text-center w-24">รูปสินค้า</th>
+                                <th class="py-4 px-4">ชื่อสินค้า</th>
+                                <th class="py-4 px-4 text-center w-40">โปรโมชั่น เก่า/ใหม่</th>
+                                <th class="py-4 px-4 text-center">สต็อกคงเหลือ</th>
+                                <th class="py-4 px-4 text-right">ต้นทุนสินค้า</th>
+                                <th class="py-4 px-4 text-center">วันที่สั่งซื้อล่าสุด</th>
+                                <th class="py-4 px-4 text-center">วันที่ดำเนินการ</th>
+                                <th class="py-4 px-4 text-center">วันที่เรียบร้อย</th>
+                                <th class="py-4 px-4 text-center">ผู้รับผิดชอบ</th>
+                                <th class="py-4 px-4 text-center">สถานะ</th>
+                                <th class="py-4 px-4 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clearance-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Loaded dynamically in JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+
+    <!-- ==================== POP UP MODAL: ราคาโปรโมชั่นเก่า / ใหม่ ==================== -->
+    <div id="promo-modal" class="hidden fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-slate-900 text-white">
+                <div>
+                    <h3 class="font-bold text-base text-white">ตั้งค่าตารางโปรโมชั่น เก่า / ใหม่</h3>
+                    <p id="promo-modal-pname" class="text-xs text-slate-400 mt-0.5">รหัสสินค้า: -</p>
+                </div>
+                <button onclick="closePromoModal()" class="text-slate-400 hover:text-white p-1 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 flex-grow bg-slate-50">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-black text-center py-2 rounded-xl"><span class="text-xs sm:text-sm font-bold text-red-500">ราคาโปรโมชั่นเดิม</span></div>
+                    <div class="bg-black text-center py-2 rounded-xl"><span class="text-xs sm:text-sm font-bold text-green-400">ราคาลดพิเศษล้างสต็อก</span></div>
+                </div>
+                <div id="promo-rows-container" class="space-y-3"></div>
+                <button type="button" onclick="addPromoRow()" class="w-full py-2.5 border-2 border-dashed border-slate-300 hover:border-indigo-500 text-slate-500 hover:text-indigo-600 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-plus-circle"></i><span>เพิ่มแถวรายการโปรโมชั่น</span>
+                </button>
+            </div>
+            <div class="p-4 bg-white border-t border-gray-100 flex justify-between items-center">
+                <button type="button" onclick="triggerClearPromos()" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl transition-all">
+                    <i class="fa-solid fa-trash-can mr-1"></i>ลบทั้งหมด
+                </button>
+                <div class="flex space-x-2">
+                    <button type="button" onclick="closePromoModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">ยกเลิก</button>
+                    <button type="button" onclick="savePromoData()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i>บันทึกข้อมูล
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== STANDARD MODAL: เพิ่ม/แก้ไขสินค้าโล๊ะ ==================== -->
+    <div id="clearance-product-modal" class="hidden fixed inset-0 bg-black/50 z-[110] flex items-center justify-center p-4 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl shadow-xl max-w-2xl w-full p-6">
+            <h3 id="clearance-modal-title" class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-tags text-rose-500"></i> <span id="clearance-modal-title-text">เพิ่มรายการสินค้าโล๊ะ</span>
+            </h3>
+            <form id="clearance-product-form" onsubmit="saveClearanceProduct(event)" class="space-y-4">
+                <input type="hidden" id="clearance-edit-index" value="-1">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">รหัสสินค้า *</label>
+                        <input type="text" id="clearance-form-pid" required placeholder="เช่น SP014" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">ชื่อสินค้าหลัก *</label>
+                        <input type="text" id="clearance-form-pname" required placeholder="เช่น ตู้เครื่องสำอาง" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">สต็อกคงเหลือ *</label>
+                        <input type="number" id="clearance-form-stock" required min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">ต้นทุนสินค้า</label>
+                        <input type="number" id="clearance-form-cost" placeholder="-" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">วันที่สั่งซื้อล่าสุด *</label>
+                        <input type="date" id="clearance-form-order-date" required class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">วันที่ดำเนินการ</label>
+                        <input type="date" id="clearance-form-process-date" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">วันที่เรียบร้อย</label>
+                        <input type="date" id="clearance-form-done-date" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">ผู้รับผิดชอบ</label>
+                        <input type="text" id="clearance-form-assignee" placeholder="เช่น เดือน, ฟลุ๊ค" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">สถานะ *</label>
+                        <select id="clearance-form-status" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 font-bold focus:ring-2 focus:ring-rose-500 outline-none">
+                            <option value="รอดำเนินการ">รอดำเนินการ</option>
+                            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                            <option value="เรียบร้อย">เรียบร้อย</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeClearanceProductModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">ยกเลิก</button>
+                    <button type="submit" class="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl shadow-sm transition-all"><i class="fa-solid fa-floppy-disk mr-2"></i>บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ==================== CUSTOM CONFIRMATION MODAL ==================== -->
+    <div id="custom-confirm-modal" class="hidden fixed inset-0 bg-black/60 z-[150] flex items-center justify-center p-4 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center border border-slate-100">
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-100">
+                <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+            </div>
+            <h3 id="confirm-title" class="text-lg font-bold text-slate-900 mb-1">ยืนยันการดำเนินการ</h3>
+            <p id="confirm-message" class="text-xs text-slate-500 mb-6">คุณแน่ใจหรือไม่ที่จะทำการดำเนินการนี้?</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button id="confirm-cancel-btn" class="py-2.5 bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 rounded-xl transition-all">ยกเลิก</button>
+                <button id="confirm-proceed-btn" class="py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all">ยืนยันทำต่อ</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== SYSTEM TOAST ALERTS ==================== -->
+    <div id="toast" class="hidden fixed bottom-6 right-6 z-[200] flex items-center p-4 min-w-[300px] text-slate-900 bg-white rounded-2xl shadow-2xl border border-slate-100 transform translate-y-5 opacity-0 transition-all duration-300">
+        <div id="toast-icon-wrapper" class="inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl">
+            <i id="toast-icon" class="fa-solid text-xl"></i>
+        </div>
+        <div id="toast-message" class="ml-4 text-sm font-bold">ระบบแจ้งเตือน</div>
+    </div>
+
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // ==================== GLOBAL UTILITIES ====================
+        function formatDate(dateStr) {
+            if (!dateStr) return "-";
+            const p = dateStr.split('-');
+            return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dateStr;
+        }
+
+        let onConfirmAction = null;
+        function openCustomConfirm(title, message, action) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            onConfirmAction = action;
+            document.getElementById('custom-confirm-modal').classList.remove('hidden');
+        }
+
+        document.getElementById('confirm-cancel-btn').addEventListener('click', () => {
+            document.getElementById('custom-confirm-modal').classList.add('hidden');
+            onConfirmAction = null;
+        });
+
+        document.getElementById('confirm-proceed-btn').addEventListener('click', () => {
+            if (onConfirmAction) onConfirmAction();
+            document.getElementById('custom-confirm-modal').classList.add('hidden');
+        });
+
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            const iconWrapper = document.getElementById('toast-icon-wrapper');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-message').innerText = message;
+
+            if (type === "success") {
+                iconWrapper.className = "inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600";
+                icon.className = "fa-solid fa-circle-check";
+            } else if (type === "error") {
+                iconWrapper.className = "inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl bg-rose-100 text-rose-600";
+                icon.className = "fa-solid fa-circle-exclamation";
+            } else {
+                iconWrapper.className = "inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl bg-blue-100 text-blue-600";
+                icon.className = "fa-solid fa-info-circle";
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.remove('translate-y-5', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-5', 'opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3500);
+        }
+
+        // ==================== SYSTEM NAVIGATION ====================
+        function unlockClearanceSystem() {
+            if (document.getElementById('gate-passcode').value === "6789") {
+                document.getElementById('gate-error').classList.add('hidden');
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('system-clearance-container').classList.remove('hidden');
+                showToast("success", "เข้าสู่ระบบสินค้าโล๊ะสำเร็จ");
+                calculateClearanceStats();
+                applyClearanceFilters();
+            } else {
+                document.getElementById('gate-error').classList.remove('hidden');
+            }
+        }
+
+        function lockSystemAction() {
+            document.getElementById('system-clearance-container').classList.add('hidden');
+            document.getElementById('lock-screen').classList.remove('hidden');
+            document.getElementById('gate-passcode').value = "";
+            showToast("info", "ล็อกหน้าต่างระบบและออกจากระบบเรียบร้อย");
+        }
+
+        document.getElementById('gate-passcode').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') unlockClearanceSystem();
+        });
+
+
+        // ==================== SYSTEM: CLEARANCE LOGIC ====================
+        let clearanceProducts = [
+            { pid: "SP001", pname: "กระเป๋าสะพายข้าง", stock: 15, cost: 120, orderDate: "2026-04-20", processDate: "2026-04-22", doneDate: "", assignee: "เดือน", status: "กำลังดำเนินการ", promos: [] },
+            { pid: "SP002", pname: "ที่วางช้อนส้อม", stock: 0, cost: 45, orderDate: "2026-04-20", processDate: "2026-04-21", doneDate: "2026-05-25", assignee: "ฟลุ๊ค", status: "เรียบร้อย", promos: [
+                { old: "1 ชุดราคา 290 บาท", new: "1 ชุดราคา 190 บาท" }
+            ]},
+            { pid: "SP013", pname: "ชั้นวางรองเท้าอเนกประสงค์", stock: 50, cost: 250, orderDate: "2026-04-23", processDate: "", doneDate: "", assignee: "", status: "รอดำเนินการ", promos: [] }
+        ];
+
+        let clearanceStatusFilter = "ALL";
+
+        function calculateClearanceStats() {
+            document.getElementById('clearance-count-all').innerText = clearanceProducts.length;
+            document.getElementById('clearance-count-waiting').innerText = clearanceProducts.filter(p => p.status === "รอดำเนินการ").length;
+            document.getElementById('clearance-count-progress').innerText = clearanceProducts.filter(p => p.status === "กำลังดำเนินการ").length;
+            document.getElementById('clearance-count-done').innerText = clearanceProducts.filter(p => p.status === "เรียบร้อย").length;
+        }
+
+        function setClearanceStatusFilter(filter) {
+            clearanceStatusFilter = filter;
+            const ids = {'ALL':'all', 'รอดำเนินการ':'waiting', 'กำลังดำเนินการ':'progress', 'เรียบร้อย':'done'};
+            
+            Object.values(ids).forEach(id => {
+                document.getElementById(`clearance-stat-${id}`).classList.remove('border-rose-300', 'ring-4', 'ring-rose-100');
+            });
+            document.getElementById(`clearance-stat-${ids[filter]}`).classList.add('border-rose-300', 'ring-4', 'ring-rose-100');
+            applyClearanceFilters();
+        }
+
+        function applyClearanceFilters() {
+            const search = document.getElementById('clearance-search-input').value.toLowerCase().trim();
+            const filtered = clearanceProducts.filter(p => {
+                if (clearanceStatusFilter !== 'ALL' && p.status !== clearanceStatusFilter) return false;
+                if (search && !p.pid.toLowerCase().includes(search) && !p.pname.toLowerCase().includes(search)) return false;
+                return true;
+            });
+            
+            const tbody = document.getElementById('clearance-table-body');
+            tbody.innerHTML = '';
+            
+            filtered.forEach(p => {
+                const idx = clearanceProducts.findIndex(x => x.pid === p.pid);
+                let badge = "";
+                if (p.status === 'รอดำเนินการ') badge = `<span class="px-2.5 py-1 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-lg">รอดำเนินการ</span>`;
+                else if (p.status === 'กำลังดำเนินการ') badge = `<span class="px-2.5 py-1 text-xs font-bold bg-amber-100 text-amber-800 rounded-lg">กำลังดำเนินการ</span>`;
+                else badge = `<span class="px-2.5 py-1 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-lg">เรียบร้อย</span>`;
+
+                const promoCount = p.promos ? p.promos.length : 0;
+                const promoBtn = `<button onclick="openPromoModal('${p.pid}')" class="relative p-2 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-xs" title="จัดการโปรโมชั่น">
+                    <i class="fa-solid fa-bullhorn text-sm"></i>
+                    ${promoCount > 0 ? `<span class="absolute -top-1 -right-1 bg-slate-900 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">${promoCount}</span>` : ''}
+                </button>`;
+
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-50 border-b border-slate-100";
+                row.innerHTML = `
+                    <td class="py-4 px-4 text-center"><input type="checkbox" class="rounded text-rose-600 w-4 h-4 focus:ring-0 border-gray-300"></td>
+                    <td class="py-4 px-4 font-bold text-slate-900">${p.pid}</td>
+                    <td class="py-4 px-4 text-center"><div class="w-10 h-10 bg-slate-100 rounded-lg border border-slate-200 mx-auto flex items-center justify-center text-slate-400"><i class="fa-regular fa-image"></i></div></td>
+                    <td class="py-4 px-4 font-bold text-slate-800">${p.pname}</td>
+                    <td class="py-4 px-4 text-center">${promoBtn}</td>
+                    <td class="py-4 px-4 text-center font-bold text-slate-700">${p.stock}</td>
+                    <td class="py-4 px-4 text-right text-slate-500">${p.cost || '-'}</td>
+                    <td class="py-4 px-4 text-center text-xs font-medium text-slate-500">${formatDate(p.orderDate)}</td>
+                    <td class="py-4 px-4 text-center text-xs font-medium text-slate-600">${formatDate(p.processDate)}</td>
+                    <td class="py-4 px-4 text-center text-xs font-medium text-emerald-600">${formatDate(p.doneDate)}</td>
+                    <td class="py-4 px-4 font-medium text-slate-600 text-center">${p.assignee || '-'}</td>
+                    <td class="py-4 px-4 text-center">${badge}</td>
+                    <td class="py-4 px-4 text-center space-x-1">
+                        <button onclick="editClearanceProduct(${idx})" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                        <button onclick="deleteClearanceProduct(${idx})" class="p-1.5 bg-slate-100 hover:bg-rose-50 text-rose-500 rounded-lg"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Clearance Promos
+        let activePromoPid = null;
+        function openPromoModal(pid) {
+            activePromoPid = pid;
+            const p = clearanceProducts.find(x => x.pid === pid);
+            document.getElementById('promo-modal-pname').innerText = `รหัสสินค้า: ${p.pid} - ${p.pname}`;
+            const container = document.getElementById('promo-rows-container');
+            container.innerHTML = '';
+            
+            if (p.promos && p.promos.length > 0) {
+                p.promos.forEach(pr => createPromoRow(pr.old, pr.new));
+            } else {
+                createPromoRow('', '');
+            }
+            document.getElementById('promo-modal').classList.remove('hidden');
+        }
+
+        function createPromoRow(oldV, newV) {
+            const div = document.createElement('div');
+            div.className = "grid grid-cols-12 gap-3 items-center bg-white p-2 rounded-xl border border-gray-200 promo-row-item";
+            div.innerHTML = `
+                <div class="col-span-5"><input type="text" value="${oldV}" placeholder="โปรโมชั่นเดิม..." class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2 text-xs text-red-600 focus:ring-1 focus:ring-red-400 outline-none"></div>
+                <div class="col-span-1 text-center text-slate-300 font-bold">➔</div>
+                <div class="col-span-5"><input type="text" value="${newV}" placeholder="โปรโมชั่นใหม่ (ลดล้างสต็อก)..." class="w-full bg-slate-50 border border-gray-300 rounded-lg p-2 text-xs text-green-700 focus:ring-1 focus:ring-green-400 outline-none"></div>
+                <div class="col-span-1 text-center"><button type="button" onclick="this.closest('.promo-row-item').remove()" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-circle-xmark"></i></button></div>
+            `;
+            document.getElementById('promo-rows-container').appendChild(div);
+        }
+        function addPromoRow() { createPromoRow('', ''); }
+        
+        function triggerClearPromos() {
+            document.getElementById('promo-rows-container').innerHTML = '';
+        }
+
+        function savePromoData() {
+            const idx = clearanceProducts.findIndex(p => p.pid === activePromoPid);
+            let promos = [];
+            document.querySelectorAll('.promo-row-item').forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                if (inputs[0].value.trim() || inputs[1].value.trim()) promos.push({ old: inputs[0].value.trim(), new: inputs[1].value.trim() });
+            });
+            clearanceProducts[idx].promos = promos;
+            document.getElementById('promo-modal').classList.add('hidden');
+            applyClearanceFilters();
+            showToast("success", "อัปเดตตารางโปรโมชั่นสำเร็จ");
+        }
+        function closePromoModal() { document.getElementById('promo-modal').classList.add('hidden'); }
+
+
+        // Clearance Add/Edit
+        function openAddClearanceModal() {
+            document.getElementById('clearance-modal-title-text').innerText = "เพิ่มรายการสินค้าโล๊ะ";
+            document.getElementById('clearance-edit-index').value = "-1";
+            document.getElementById('clearance-product-form').reset();
+            document.getElementById('clearance-form-order-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('clearance-product-modal').classList.remove('hidden');
+        }
+        function closeClearanceProductModal() { document.getElementById('clearance-product-modal').classList.add('hidden'); }
+
+        function saveClearanceProduct(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('clearance-edit-index').value);
+            const data = {
+                pid: document.getElementById('clearance-form-pid').value.trim(),
+                pname: document.getElementById('clearance-form-pname').value.trim(),
+                stock: parseInt(document.getElementById('clearance-form-stock').value) || 0,
+                cost: document.getElementById('clearance-form-cost').value.trim(),
+                orderDate: document.getElementById('clearance-form-order-date').value,
+                processDate: document.getElementById('clearance-form-process-date').value,
+                doneDate: document.getElementById('clearance-form-done-date').value,
+                assignee: document.getElementById('clearance-form-assignee').value.trim(),
+                status: document.getElementById('clearance-form-status').value,
+                promos: idx !== -1 ? clearanceProducts[idx].promos : []
+            };
+
+            if (idx === -1) clearanceProducts.push(data);
+            else clearanceProducts[idx] = data;
+
+            closeClearanceProductModal();
+            calculateClearanceStats();
+            applyClearanceFilters();
+            showToast("success", "บันทึกข้อมูลสินค้าโล๊ะสำเร็จ");
+        }
+
+        function editClearanceProduct(idx) {
+            const p = clearanceProducts[idx];
+            document.getElementById('clearance-modal-title-text').innerText = "แก้ไขข้อมูล: " + p.pid;
+            document.getElementById('clearance-edit-index').value = idx;
+            document.getElementById('clearance-form-pid').value = p.pid;
+            document.getElementById('clearance-form-pname').value = p.pname;
+            document.getElementById('clearance-form-stock').value = p.stock;
+            document.getElementById('clearance-form-cost').value = p.cost;
+            document.getElementById('clearance-form-order-date').value = p.orderDate;
+            document.getElementById('clearance-form-process-date').value = p.processDate;
+            document.getElementById('clearance-form-done-date').value = p.doneDate;
+            document.getElementById('clearance-form-assignee').value = p.assignee;
+            document.getElementById('clearance-form-status').value = p.status;
+            document.getElementById('clearance-product-modal').classList.remove('hidden');
+        }
+
+        function deleteClearanceProduct(idx) {
+            openCustomConfirm("ลบสินค้าโล๊ะ", "ยืนยันการลบรายการสินค้านี้ออกจากระบบ?", () => {
+                clearanceProducts.splice(idx, 1);
+                calculateClearanceStats();
+                applyClearanceFilters();
+                showToast("success", "ลบข้อมูลสำเร็จ");
+            });
+        }
+
+        // On Load initialization
+        window.onload = function() {
+            // ระบบ Standalone รอล็อกอินจากหน้า Lock Screen
+        };
+    </script>
+</body>
+</html>

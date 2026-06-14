@@ -1,0 +1,228 @@
+{% load producttest_tags %}
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:800px">
+        <div class="modal-content" style="border-radius:1.5rem;overflow:hidden">
+            <!-- Header -->
+            <div class="p-4 d-flex justify-content-between align-items-center" style="background:#f8fafc;border-bottom:1px solid #e2e8f0">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="rounded-3 d-flex align-items-center justify-content-center"
+                          style="width:40px;height:40px;background:#e0e7ff;color:#4f46e5">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </span>
+                    <h5 class="mb-0 fw-bold">
+                        {% if instance %}แก้ไขข้อมูล: {{ instance.pid }}{% else %}เพิ่มสินค้าทดสอบใหม่{% endif %}
+                    </h5>
+                </div>
+                <button class="btn-close" data-bs-dismiss="modal" style="font-size:.7rem"></button>
+            </div>
+
+            <form method="post"
+                  action="{% if instance %}{% url 'product_edit' instance.pk %}{% else %}{% url 'product_add' %}{% endif %}"
+                  hx-post="{% if instance %}{% url 'product_edit' instance.pk %}{% else %}{% url 'product_add' %}{% endif %}"
+                  hx-target="#modal-container"
+                  hx-swap="innerHTML"
+                  hx-encoding="multipart/form-data"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="p-4 overflow-y-auto d-flex flex-column gap-4" style="max-height:75vh;overflow-y:auto">
+                    <!-- Row 1: PID + Name -->
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">
+                                Product ID *
+                                {% if not instance %}
+                                <span class="ms-1 px-1 rounded-1" style="font-size:.6rem;background:#eef2ff;color:#4f46e5;font-weight:600">สร้างอัตโนมัติ</span>
+                                {% endif %}
+                            </label>
+                            {{ form.pid }}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">ชื่อสินค้า *</label>
+                            {{ form.name }}
+                        </div>
+                    </div>
+
+                    <!-- Image upload -->
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">รูปสินค้า</label>
+                            {% if instance and instance.image %}
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <img src="{{ instance.image.url }}"
+                                     class="rounded-3"
+                                     style="width:72px;height:72px;object-fit:cover;border:2px solid #e2e8f0">
+                                <div style="font-size:.72rem;color:#64748b">รูปปัจจุบัน — เลือกไฟล์ใหม่เพื่อเปลี่ยน</div>
+                            </div>
+                            {% endif %}
+                            {{ form.image }}
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Info + Detail -->
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">ข้อมูลสินค้า</label>
+                            {{ form.info }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">รายละเอียดการทำงาน / หมายเหตุ</label>
+                            {{ form.detail }}
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Dates -->
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">วันที่ลงข้อมูล *</label>
+                            {{ form.upload_date }}
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">วันที่เริ่มทดสอบ *</label>
+                            {{ form.start_date }}
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">วันที่สิ้นสุดทดสอบ</label>
+                            {{ form.end_date }}
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Graphic + MKT -->
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0">
+                                <label class="form-label fw-bold d-block pb-1 mb-2" style="font-size:.72rem;color:#475569;border-bottom:1px solid #e2e8f0">Graphic</label>
+                                <div class="d-flex flex-wrap gap-3">
+                                    {% for emp in form.graphic_members %}
+                                    <div class="form-check mb-0">
+                                        {{ emp.tag }}
+                                        <label class="form-check-label" for="{{ emp.id_for_label }}">{{ emp.choice_label }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0">
+                                <label class="form-label fw-bold d-block pb-1 mb-2" style="font-size:.72rem;color:#475569;border-bottom:1px solid #e2e8f0">MKT</label>
+                                <div class="d-flex flex-wrap gap-3">
+                                    {% for emp in form.mkt_members %}
+                                    <div class="form-check mb-0">
+                                        {{ emp.tag }}
+                                        <label class="form-check-label" for="{{ emp.id_for_label }}">{{ emp.choice_label }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 5: PAGE dynamic rows -->
+                    <div class="p-3 rounded-3" style="border:1px solid #e2e8f0;background:white">
+                        <div class="d-flex justify-content-between align-items-center pb-2 mb-2" style="border-bottom:1px solid #f1f5f9">
+                            <label class="fw-bold mb-0" style="font-size:.8rem">
+                                <i class="fa-brands fa-facebook me-1" style="color:#2563eb"></i>ข้อมูล PAGE (แคมเปญ / ลิงก์เพจ)
+                            </label>
+                        </div>
+                        <div class="row g-0 mb-2 px-1">
+                            <div class="col-5 text-center" style="font-size:.62rem;font-weight:700;color:#94a3b8">PAGE</div>
+                            <div class="col-2"></div>
+                            <div class="col-5 text-center" style="font-size:.62rem;font-weight:700;color:#94a3b8">URL</div>
+                        </div>
+                        <div id="page-dynamic-container" class="d-flex flex-column gap-2 mb-2">
+                            {% for pg in pages %}
+                            <div class="row g-2 align-items-center page-row-item rounded-3 py-1 px-1"
+                                 style="background:#f8fafc;border:1px solid #f1f5f9">
+                                <div class="col-5">
+                                    <input type="text" class="form-control form-control-sm page-inp"
+                                           value="{{ pg.page }}" placeholder="กรอกข้อมูล PAGE..."
+                                           style="font-size:.75rem">
+                                </div>
+                                <div class="col-2 text-center" style="color:#cbd5e1;font-weight:700">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" class="form-control form-control-sm url-inp"
+                                           value="{{ pg.url }}" placeholder="กรอกข้อมูล URL..."
+                                           style="font-size:.75rem">
+                                </div>
+                                <div class="col-1 text-center">
+                                    <button type="button" onclick="this.closest('.page-row-item').remove()"
+                                            class="btn btn-sm p-0 border-0"
+                                            style="color:#94a3b8;background:none;transition:color .15s"
+                                            onmouseover="this.style.color='#f43f5e'"
+                                            onmouseout="this.style.color='#94a3b8'">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <!-- JS will add a blank row on open -->
+                            {% endfor %}
+                        </div>
+                        <button type="button" onclick="addPageRow()"
+                                class="w-100 py-2 rounded-3 fw-bold border-0"
+                                style="border:2px dashed #e2e8f0 !important;background:transparent;color:#94a3b8;font-size:.75rem;transition:all .15s"
+                                onmouseover="this.style.borderColor='#4f46e5';this.style.color='#4f46e5'"
+                                onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#94a3b8'">
+                            <i class="fa-solid fa-plus-circle me-1"></i>เพิ่มแถวรายการ PAGE
+                        </button>
+                        <input type="hidden" name="pages_json" id="pages-json">
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="p-4 d-flex justify-content-end gap-2" style="border-top:1px solid #f1f5f9;background:#f8fafc">
+                    <button type="button" class="btn btn-sm fw-bold" data-bs-dismiss="modal"
+                            style="background:white;border:1px solid #e2e8f0;color:#475569;font-size:.8rem">ยกเลิก</button>
+                    <button type="submit" class="btn btn-sm fw-bold px-4"
+                            onclick="collectFormData()"
+                            style="background:#4f46e5;color:white;font-size:.8rem">
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+function addPageRow(page='', url='') {
+    const div = document.createElement('div');
+    div.className = 'row g-2 align-items-center page-row-item rounded-3 py-1 px-1';
+    div.style.cssText = 'background:#f8fafc;border:1px solid #f1f5f9';
+    div.innerHTML = `
+        <div class="col-5">
+            <input type="text" class="form-control form-control-sm page-inp"
+                   value="${page}" placeholder="กรอกข้อมูล PAGE..." style="font-size:.75rem">
+        </div>
+        <div class="col-2 text-center" style="color:#cbd5e1;font-weight:700">
+            <i class="fa-solid fa-arrow-right"></i>
+        </div>
+        <div class="col-4">
+            <input type="text" class="form-control form-control-sm url-inp"
+                   value="${url}" placeholder="กรอกข้อมูล URL..." style="font-size:.75rem">
+        </div>
+        <div class="col-1 text-center">
+            <button type="button" onclick="this.closest('.page-row-item').remove()"
+                    class="btn btn-sm p-0 border-0" style="color:#94a3b8;background:none"
+                    onmouseover="this.style.color='#f43f5e'" onmouseout="this.style.color='#94a3b8'">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+        </div>`;
+    document.getElementById('page-dynamic-container').appendChild(div);
+}
+
+function collectFormData() {
+    const pages = [];
+    document.querySelectorAll('.page-row-item').forEach(r => {
+        const page = r.querySelector('.page-inp')?.value.trim() || '';
+        const url  = r.querySelector('.url-inp')?.value.trim() || '';
+        if (page || url) pages.push({page, url});
+    });
+    document.getElementById('pages-json').value = JSON.stringify(pages);
+}
+
+// Add blank page row if no pages exist yet
+if (document.querySelectorAll('.page-row-item').length === 0) addPageRow();
+</script>

@@ -1,0 +1,41 @@
+<div class="modal fade" id="empModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">{% if instance %}แก้ไข: {{ instance.name }}{% else %}เพิ่มพนักงาน{% endif %}</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post"
+                  action="{% if instance %}{% url 'employee_edit' instance.pk %}{% else %}{% url 'employee_add' %}{% endif %}"
+                  hx-post="{% if instance %}{% url 'employee_edit' instance.pk %}{% else %}{% url 'employee_add' %}{% endif %}"
+                  hx-target="#employee-rows"
+                  hx-swap="innerHTML">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">ชื่อพนักงาน *</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="d-flex gap-4">
+                        <div class="form-check">
+                            {{ form.is_graphic }}
+                            <label class="form-check-label fw-semibold">Graphic</label>
+                        </div>
+                        <div class="form-check">
+                            {{ form.is_mkt }}
+                            <label class="form-check-label fw-semibold">MKT</label>
+                        </div>
+                        <div class="form-check">
+                            {{ form.is_active }}
+                            <label class="form-check-label fw-semibold">ใช้งาน</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary fw-bold" data-bs-dismiss="modal">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

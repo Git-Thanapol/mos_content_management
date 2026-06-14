@@ -1,0 +1,180 @@
+{% load producttest_tags %}
+<div class="modal fade" id="supManageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-width:580px">
+        <div class="modal-content" style="border-radius:1.5rem;overflow:hidden">
+            <div class="d-flex justify-content-between align-items-center p-4" style="background:#1e1b4b;color:white">
+                <h6 class="mb-0 fw-bold"><i class="fa-solid fa-user-shield me-2"></i>จัดการผลทดสอบและค่าคอมมิชชั่น</h6>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal" style="font-size:.65rem"></button>
+            </div>
+
+            <form method="post"
+                  action="{% url 'supervisor_manage' product.pk %}"
+                  hx-post="{% url 'supervisor_manage' product.pk %}"
+                  hx-target="#modal-container"
+                  hx-swap="innerHTML"
+                  hx-encoding="multipart/form-data"
+                  enctype="multipart/form-data"
+                  class="p-4 overflow-y-auto d-flex flex-column gap-3" style="max-height:80vh;overflow-y:auto">
+                {% csrf_token %}
+
+                <!-- Product info bar -->
+                <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background:#eef2ff;border:1px solid #c7d2fe">
+                    <div>
+                        <div style="font-size:.65rem;font-weight:700;color:#818cf8">รหัสและสินค้า</div>
+                        <div class="fw-bold" style="color:#1e1b4b">{{ product.pid }} — {{ product.name }}</div>
+                    </div>
+                    <div class="text-end">
+                        <div style="font-size:.65rem;font-weight:700;color:#818cf8">จำนวนคนหาร</div>
+                        <div class="fw-bold" style="font-size:1.1rem;color:#1e1b4b">{{ product.member_count }} คน</div>
+                    </div>
+                </div>
+
+                <!-- Test status override -->
+                <div class="p-3 rounded-3" style="border:1px solid #e2e8f0;background:#f8fafc">
+                    <div class="fw-bold mb-2" style="font-size:.7rem;color:#4f46e5;border-bottom:1px solid #e2e8f0;padding-bottom:6px">
+                        แก้ไขสถานะการทดสอบ
+                    </div>
+                    <select name="manual_status" class="form-select form-select-sm fw-bold"
+                            style="background:white;border-color:#e2e8f0;color:#334155">
+                        {% for val,label in manual_status_choices %}
+                        <option value="{{ val }}" {% if product.manual_status == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Performance -->
+                <div class="p-3 rounded-3" style="border:1px solid #e2e8f0;background:white">
+                    <div class="fw-bold mb-3" style="font-size:.7rem;color:#4f46e5;border-bottom:1px solid #f1f5f9;padding-bottom:6px">
+                        <i class="fa-solid fa-chart-pie me-1"></i>ข้อมูลผลลัพธ์การขาย (Performance)
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <label class="fw-bold d-block mb-1" style="font-size:.62rem;color:#64748b">จำนวนออเดอร์</label>
+                            {{ perf_form.orders }}
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="fw-bold d-block mb-1" style="font-size:.62rem;color:#64748b">ยอดขาย</label>
+                            {{ perf_form.sales }}
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="fw-bold d-block mb-1" style="font-size:.62rem;color:#64748b">ค่าโฆษณา</label>
+                            {{ perf_form.ads }}
+                            <div style="font-size:.62rem;color:#94a3b8;margin-top:3px">
+                                %Ads: <span id="ads-pct" class="fw-bold" style="color:#f43f5e">{{ performance.ads_pct }}%</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="fw-bold d-block mb-1" style="font-size:.62rem;color:#64748b">กำไร</label>
+                            {{ perf_form.profit }}
+                            <div style="font-size:.62rem;color:#94a3b8;margin-top:3px">
+                                %กำไร: <span id="profit-pct" class="fw-bold"
+                                             style="color:{% if performance.profit_is_negative %}#f43f5e{% else %}#059669{% endif %}">{{ performance.profit_pct }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commission -->
+                <div class="p-3 rounded-3" style="border:1px solid #e2e8f0;background:white">
+                    <div class="fw-bold mb-3" style="font-size:.7rem;color:#4f46e5;border-bottom:1px solid #f1f5f9;padding-bottom:6px">
+                        <i class="fa-solid fa-money-check-dollar me-1"></i>จัดการค่าคอมมิชชั่น
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold d-block mb-1" style="font-size:.75rem;color:#334155">ยอดรวมค่าคอมมิชชั่นทั้งหมด</label>
+                        {{ comm_form.total }}
+                        <p class="mt-2 mb-0" style="font-size:.72rem;color:#64748b">
+                            ระบบจะเฉลี่ยให้คนละ:
+                            <span id="avg-comm" class="fw-bold" style="color:#059669;font-size:.85rem">{{ commission.per_person|format_decimal }}</span>
+                        </p>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="fw-bold d-block mb-1" style="font-size:.72rem;color:#334155">สถานะค่าคอมมิชชั่น</label>
+                            {{ comm_form.status }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-bold d-block mb-1" style="font-size:.72rem;color:#334155">หมายเหตุ</label>
+                            {{ comm_form.note }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slip upload (shown only when status = จ่ายค่าคอมเรียบร้อย) -->
+                <div id="slip-upload-box" class="p-3 rounded-3 {% if commission.status != 'จ่ายค่าคอมเรียบร้อย' %}d-none{% endif %}"
+                     style="border:2px dashed #e2e8f0;background:#f8fafc">
+                    <label class="fw-bold d-block mb-2" style="font-size:.72rem;color:#334155">
+                        แนบหลักฐานการโอนเงิน (หลายรูปได้)
+                    </label>
+                    <input type="file" name="slips" multiple accept="image/*"
+                           class="form-control form-control-sm"
+                           style="font-size:.75rem">
+
+                    <!-- Existing slips grid — matching mockup's image-preview-container -->
+                    {% if slips %}
+                    <div class="row g-2 mt-2">
+                        {% for slip in slips %}
+                        <div class="col-6">
+                            <a href="{{ slip.image.url }}" target="_blank" class="d-block">
+                                <img src="{{ slip.image.url }}"
+                                     class="img-thumbnail w-100"
+                                     style="height:100px;object-fit:cover;border-radius:.5rem">
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Footer -->
+                <div class="d-flex justify-content-end gap-2 pt-2" style="border-top:1px solid #f1f5f9">
+                    <button type="button" class="btn btn-sm fw-bold" data-bs-dismiss="modal"
+                            style="background:#f1f5f9;color:#475569;font-size:.8rem">ยกเลิก</button>
+                    <button type="submit" class="btn btn-sm fw-bold px-4"
+                            style="background:#4f46e5;color:white;font-size:.8rem">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>บันทึกผลการดำเนินการ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+const _memberCount = {{ product.member_count }};
+
+// Live % calc — mirrors mockup calcPerfPercents (onkeyup on sales/ads/profit)
+function calcPerf() {
+    const sales  = parseFloat(document.querySelector('[name="sales"]')?.value) || 0;
+    const ads    = parseFloat(document.querySelector('[name="ads"]')?.value) || 0;
+    const profit = parseFloat(document.querySelector('[name="profit"]')?.value) || 0;
+    const adsPct    = sales > 0 ? (ads / sales * 100).toFixed(2) : '0.00';
+    const profitPct = sales > 0 ? (profit / sales * 100).toFixed(2) : '0.00';
+    const pctEl = document.getElementById('profit-pct');
+    document.getElementById('ads-pct').textContent = adsPct + '%';
+    pctEl.textContent = profitPct + '%';
+    pctEl.style.color = profit < 0 ? '#f43f5e' : '#059669';
+}
+
+// Live avg calc — mirrors mockup calcAvgComm (onkeyup on total)
+function calcAvg() {
+    const total = parseFloat(document.querySelector('[name="total"]')?.value) || 0;
+    const avg = _memberCount > 0 ? (total / _memberCount).toFixed(2) : '0.00';
+    document.getElementById('avg-comm').textContent = parseFloat(avg).toLocaleString('th-TH', {minimumFractionDigits:2});
+}
+
+// Toggle slip upload — mirrors mockup toggleSlipUpload
+function toggleSlip() {
+    const v = document.querySelector('[name="status"]')?.value;
+    const box = document.getElementById('slip-upload-box');
+    if (box) box.classList.toggle('d-none', v !== 'จ่ายค่าคอมเรียบร้อย');
+}
+
+// Wire up onkeyup (matching mockup) instead of oninput
+['sales','ads','profit'].forEach(n => {
+    const el = document.querySelector(`[name="${n}"]`);
+    if (el) { el.addEventListener('keyup', calcPerf); el.addEventListener('change', calcPerf); }
+});
+const totalEl = document.querySelector('[name="total"]');
+if (totalEl) { totalEl.addEventListener('keyup', calcAvg); totalEl.addEventListener('change', calcAvg); }
+const statusEl = document.querySelector('[name="status"]');
+if (statusEl) statusEl.addEventListener('change', toggleSlip);
+</script>

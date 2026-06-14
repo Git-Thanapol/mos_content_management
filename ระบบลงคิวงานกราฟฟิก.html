@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphic Queue System - ระบบลงคิวงานกราฟฟิก</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Prompt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Custom styles for active dashboard cards */
+        .dash-card-active {
+            border-color: rgba(99, 102, 241, 0.5) !important;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+            transform: scale(1.02);
+        }
+        .dash-card-active-white {
+            border-color: white !important;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3) !important;
+            transform: scale(1.02);
+        }
+
+        /* Checkbox styling */
+        .custom-checkbox input:checked + div {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+        .custom-checkbox input:checked + div svg {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-4">
+                    <button class="bg-slate-900 hover:bg-slate-800 text-white font-bold p-2.5 rounded-xl text-sm transition-all shadow-md flex items-center justify-center">
+                        <i class="fa-solid fa-bars-staggered text-lg"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-indigo-600 text-white p-2.5 rounded-xl flex items-center justify-center transition-colors duration-300 shadow-md">
+                            <i class="fa-solid fa-paintbrush text-lg"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Graphic Queue Center</h1>
+                            <span class="text-[11px] text-slate-500 font-medium block">ระบบจัดการและติดตามคิวงานกราฟฟิก</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="text-right hidden sm:block">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-indigo-500 animate-pulse"></span> โหมดจัดการคิวงาน
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-grow flex flex-col">
+        <main class="flex-grow max-w-[1800px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative space-y-4">
+
+            <!-- DASHBOARD BAR -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-2">
+                <!-- ทั้งหมด -->
+                <button onclick="setStatusFilter('ALL')" id="dash-ALL" class="flex flex-col items-start p-4 bg-slate-600 text-white rounded-2xl shadow-sm hover:scale-[1.02] transition-all border-2 border-transparent relative overflow-hidden group dash-card-active-white">
+                    <div class="absolute right-3 top-3 opacity-20"><i class="fa-solid fa-layer-group text-2xl"></i></div>
+                    <span class="text-[10px] font-semibold opacity-80 uppercase tracking-wider block">คิวงานทั้งหมด</span>
+                    <span id="count-all" class="text-3xl font-bold mt-1 block z-10">0</span>
+                </button>
+                <!-- รอดำเนินการ -->
+                <button onclick="setStatusFilter('รอดำเนินการ')" id="dash-wait" class="flex flex-col items-start p-4 bg-slate-400 text-white rounded-2xl shadow-sm hover:scale-[1.02] transition-all border-2 border-transparent relative overflow-hidden group">
+                    <div class="absolute right-3 top-3 opacity-20"><i class="fa-solid fa-clock text-2xl"></i></div>
+                    <span class="text-[10px] font-semibold opacity-90 uppercase tracking-wider block">รอดำเนินการ</span>
+                    <span id="count-wait" class="text-3xl font-bold mt-1 block z-10">0</span>
+                </button>
+                <!-- กำลังดำเนินการ -->
+                <button onclick="setStatusFilter('กำลังดำเนินการ')" id="dash-prog" class="flex flex-col items-start p-4 bg-amber-500 text-white rounded-2xl shadow-sm hover:scale-[1.02] transition-all border-2 border-transparent relative overflow-hidden group">
+                    <div class="absolute right-3 top-3 opacity-20"><i class="fa-solid fa-spinner animate-spin text-2xl"></i></div>
+                    <span class="text-[10px] font-semibold opacity-90 uppercase tracking-wider block">กำลังดำเนินการ</span>
+                    <span id="count-prog" class="text-3xl font-bold mt-1 block z-10">0</span>
+                </button>
+                <!-- จำนวนงานที่ค้าง (รอ + กำลังทำ) -->
+                <button onclick="setStatusFilter('งานที่ค้าง')" id="dash-backlog" class="flex flex-col items-start p-4 bg-rose-500 text-white rounded-2xl shadow-sm hover:scale-[1.02] transition-all border-2 border-transparent relative overflow-hidden group">
+                    <div class="absolute right-3 top-3 opacity-20"><i class="fa-solid fa-triangle-exclamation text-2xl"></i></div>
+                    <span class="text-[10px] font-semibold opacity-90 uppercase tracking-wider block">จำนวนงานที่ค้าง</span>
+                    <div class="flex items-baseline space-x-2 mt-1 z-10">
+                        <span id="count-backlog" class="text-3xl font-bold">0</span>
+                        <span class="text-[9px] opacity-75">(รอ + กำลังทำ)</span>
+                    </div>
+                </button>
+                <!-- เรียบร้อย -->
+                <button onclick="setStatusFilter('เรียบร้อย')" id="dash-done" class="flex flex-col items-start p-4 bg-emerald-500 text-white rounded-2xl shadow-sm hover:scale-[1.02] transition-all border-2 border-transparent relative overflow-hidden group">
+                    <div class="absolute right-3 top-3 opacity-20"><i class="fa-solid fa-circle-check text-2xl"></i></div>
+                    <span class="text-[10px] font-semibold opacity-90 uppercase tracking-wider block">เรียบร้อย</span>
+                    <span id="count-done" class="text-3xl font-bold mt-1 block z-10">0</span>
+                </button>
+            </div>
+
+            <!-- FILTER & SEARCH BAR -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    
+                    <div class="md:col-span-2">
+                        <select id="filter-type" onchange="renderTable()" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="ALL">ประเภทสินค้า (ทั้งหมด)</option>
+                            <option value="สินค้าเก่า">สินค้าเก่า</option>
+                            <option value="สินค้าเทส">สินค้าเทส</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <select id="filter-assignee" onchange="renderTable()" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="ALL">ผู้รับผิดชอบ (ทั้งหมด)</option>
+                            <option value="บอส">บอส</option>
+                            <option value="มอส">มอส</option>
+                            <option value="เบ้น">เบ้น</option>
+                            <option value="แก้ว">แก้ว</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2 relative">
+                        <!-- Date picker for month/year -->
+                        <input type="month" id="filter-month" onchange="renderTable()" class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 text-slate-600 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+
+                    <div class="md:col-span-4 relative">
+                        <input type="text" id="filter-search" onkeyup="renderTable()" placeholder="ค้นหาชื่อสินค้า หรือ SKU..." class="w-full bg-slate-50 border border-slate-300 text-sm rounded-xl p-2.5 pl-9 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-xs"></i>
+                    </div>
+
+                    <div class="md:col-span-2 text-right">
+                        <button onclick="openFormModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-plus-circle"></i>
+                            <span>เพิ่มคิวงาน</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TABLE SECTION -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-max">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-4 px-3 text-center whitespace-nowrap">จัดการ</th>
+                                <th class="py-4 px-3 whitespace-nowrap">SKU</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">รูปสินค้า</th>
+                                <th class="py-4 px-3 whitespace-nowrap">ชื่อสินค้า</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">สถานะ</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">ประเภทงาน</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">ประเภทสินค้า</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">วันที่สั่งงาน</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">วันเดดไลน์</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">วันที่ส่งงาน</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">จำนวนวันที่ทำงาน</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">ข้อมูลสื่อ (Media)</th>
+                                <th class="py-4 px-3 whitespace-nowrap">ผู้รับผิดชอบ</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">ข้อมูลสื่ออ้างอิง</th>
+                                <th class="py-4 px-3 text-center whitespace-nowrap">URL ลิ้งค์ส่งงาน</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-100 text-sm text-slate-700">
+                            <!-- JS Renders Here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Empty state fallback -->
+            <div id="empty-state" class="hidden text-center py-10 bg-white rounded-2xl border border-slate-200 shadow-sm mt-4">
+                <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-3"></i>
+                <p class="text-slate-500 font-medium text-sm">ไม่พบข้อมูลคิวงานที่ตรงกับเงื่อนไข</p>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Main Add/Edit Form Modal -->
+    <div id="form-modal" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <div class="flex items-center space-x-3">
+                    <span class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center"><i class="fa-solid fa-paintbrush text-lg"></i></span>
+                    <h3 id="modal-title" class="text-lg font-bold text-slate-900">เพิ่มคิวงานกราฟฟิก</h3>
+                </div>
+                <button onclick="closeFormModal()" class="text-slate-400 hover:text-slate-700 p-2"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+
+            <form id="queue-form" onsubmit="saveJob(event)" class="p-6 overflow-y-auto flex-grow bg-white">
+                <input type="hidden" id="form-idx" value="-1">
+                
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    
+                    <!-- Left Column (General Info) -->
+                    <div class="md:col-span-5 space-y-4">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-4">
+                            <h4 class="text-xs font-bold text-indigo-600 uppercase tracking-wider border-b border-indigo-100 pb-2"><i class="fa-solid fa-info-circle mr-1"></i>ข้อมูลทั่วไป</h4>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">SKU *</label>
+                                <input type="text" id="form-sku" required class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">ชื่อสินค้า *</label>
+                                <input type="text" id="form-name" required class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">ประเภทงาน</label>
+                                    <select id="form-urgency" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 font-medium">
+                                        <option value="ทั่วไป">ทั่วไป</option>
+                                        <option value="ด่วน">ด่วน</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">ประเภทสินค้า</label>
+                                    <select id="form-type" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 font-medium">
+                                        <option value="สินค้าเทส">สินค้าเทส</option>
+                                        <option value="สินค้าเก่า">สินค้าเก่า</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">ผู้รับผิดชอบงาน *</label>
+                                <select id="form-assignee" required class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 font-medium">
+                                    <option value="">-- เลือก --</option>
+                                    <option value="บอส">บอส</option>
+                                    <option value="มอส">มอส</option>
+                                    <option value="เบ้น">เบ้น</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">วันที่สั่งงาน *</label>
+                                    <input type="date" id="form-order-date" required class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">วันเดดไลน์ *</label>
+                                    <input type="date" id="form-deadline" required class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-rose-300">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status & Result -->
+                        <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-800 mb-1">สถานะงาน</label>
+                                <select id="form-status" class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-sm font-bold text-indigo-700">
+                                    <option value="รอดำเนินการ">รอดำเนินการ</option>
+                                    <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                                    <option value="เรียบร้อย">เรียบร้อย</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-800 mb-1">วันที่ส่งงาน (ถ้าเสร็จแล้ว)</label>
+                                <input type="date" id="form-submit-date" class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-800 mb-1">ลิ้งค์ส่งงาน URL</label>
+                                <input type="text" id="form-url" placeholder="เช่น file:///C:/... หรือ Google Drive" class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column (Media Details & Reference) -->
+                    <div class="md:col-span-7 space-y-4">
+                        
+                        <!-- Media Details Checkbox Group -->
+                        <div class="border border-slate-200 rounded-2xl p-4 shadow-sm">
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2 mb-3"><i class="fa-solid fa-photo-film text-slate-400 mr-1"></i>หัวข้อ สื่อที่ต้องการทำ</h4>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <!-- Videos -->
+                                <div>
+                                    <h5 class="text-[11px] font-bold text-rose-500 mb-2">1. งานคลิป 5 แบบ</h5>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-vid" value="คลิป 1:1 (มีกรอบข้อมูล)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>คลิป 1:1 (มีกรอบข้อมูล)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-vid" value="คลิป 9:16 (มีกรอบข้อมูล)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>คลิป 9:16 (มีกรอบข้อมูล)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-vid" value="คลิป 1:1 (ไม่มีกรอบ)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>คลิป 1:1 (ไม่มีกรอบ)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-vid" value="คลิป 9:16 (ไม่มีกรอบ) 1" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>คลิป 9:16 (ไม่มีกรอบ) - แบบ 1</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-vid" value="คลิป 9:16 (ไม่มีกรอบ) 2" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>คลิป 9:16 (ไม่มีกรอบ) - แบบ 2</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Images -->
+                                <div>
+                                    <h5 class="text-[11px] font-bold text-blue-500 mb-2">2. งานรูปภาพ</h5>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-img" value="ภาพ อัลบั้ม 4 ภาพ ขนาด 1:1 (เซ็ตที่ 1)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>ภาพ อัลบั้ม 4 ภาพ 1:1 (เซ็ต 1)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-img" value="ภาพ อัลบั้ม 4 ภาพ ขนาด 1:1 (เซ็ตที่ 2)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>ภาพ อัลบั้ม 4 ภาพ 1:1 (เซ็ต 2)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-img" value="ภาพ อัลบั้ม 4 ภาพ ขนาด 1:1 (เซ็ตที่ 3)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>ภาพ อัลบั้ม 4 ภาพ 1:1 (เซ็ต 3)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-img" value="ภาพ อัลบั้ม 4 ภาพ ขนาด 1:1 (เซ็ตที่ 4)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>ภาพ อัลบั้ม 4 ภาพ 1:1 (เซ็ต 4)</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="checkbox" name="media-img" value="ภาพ อัลบั้ม 4 ภาพ ขนาด 1:1 (เซ็ตที่ 5)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                            <span>ภาพ อัลบั้ม 4 ภาพ 1:1 (เซ็ต 5)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reference Info -->
+                        <div class="border border-slate-200 rounded-2xl p-4 shadow-sm bg-slate-50">
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider border-b border-slate-200 pb-2 mb-3"><i class="fa-solid fa-book-open text-slate-400 mr-1"></i>ข้อมูลสื่ออ้างอิง</h4>
+                            
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">ข้อความบรีฟงานอธิบายภาพ</label>
+                                    <textarea id="form-ref-text" rows="3" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="รายละเอียดที่ต้องการให้กราฟฟิกทำ..."></textarea>
+                                </div>
+                                <div class="border-2 border-dashed border-slate-300 p-4 rounded-xl text-center bg-white">
+                                    <label class="block text-xs font-bold text-slate-600 mb-2 cursor-pointer">อัพโหลดรูปภาพอ้างอิง (แนบได้หลายภาพ)</label>
+                                    <input type="file" id="form-ref-files" multiple accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white">
+                    <button type="button" onclick="closeFormModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm font-bold rounded-xl transition-colors">ยกเลิก</button>
+                    <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-md transition-colors"><i class="fa-solid fa-save mr-1"></i> บันทึกข้อมูลคิวงาน</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: View Media Details -->
+    <div id="view-media-modal" class="hidden fixed inset-0 bg-black/50 z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-photo-film mr-2"></i>รายละเอียดสื่อที่ต้องทำ</h3>
+                <button onclick="document.getElementById('view-media-modal').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-times text-lg"></i></button>
+            </div>
+            <div class="p-5">
+                <div id="media-content" class="space-y-4">
+                    <!-- JS generated list -->
+                </div>
+                <div class="mt-6 pt-4 border-t border-slate-200 text-right">
+                    <button onclick="document.getElementById('view-media-modal').classList.add('hidden')" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: View Reference Data -->
+    <div id="view-ref-modal" class="hidden fixed inset-0 bg-black/50 z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+                <h3 class="font-bold text-sm"><i class="fa-solid fa-book-open mr-2"></i>ข้อมูลสื่ออ้างอิง</h3>
+                <button onclick="document.getElementById('view-ref-modal').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-times text-lg"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-grow">
+                <div class="mb-4">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">ข้อความบรีฟงาน</h4>
+                    <div id="ref-text-content" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap"></div>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">รูปภาพอ้างอิง</h4>
+                    <div id="ref-images-content" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <!-- JS generated images -->
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-200 text-right bg-slate-50">
+                <button onclick="document.getElementById('view-ref-modal').classList.add('hidden')" class="px-5 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl transition-colors">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Textarea for Clipboard -->
+    <textarea id="hidden-clipboard" class="hidden absolute top-0 left-0 opacity-0 z-[-1]"></textarea>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-6 right-6 z-[200] flex items-center p-4 min-w-[300px] bg-white rounded-2xl shadow-2xl border border-slate-100 transform -translate-y-full opacity-0 transition-all duration-300 pointer-events-none">
+        <div id="toast-icon-wrapper" class="inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl">
+            <i id="toast-icon" class="fa-solid text-xl"></i>
+        </div>
+        <div id="toast-message" class="ml-4 text-sm font-bold text-slate-800"></div>
+    </div>
+
+    <script>
+        // --- DATA STATE ---
+        let currentStatusFilter = "ALL";
+        
+        // Mock Data
+        let jobs = [
+            {
+                sku: "SKU-001", image: "", name: "เซ็ตครีมหน้าใส",
+                status: "กำลังดำเนินการ", urgency: "ด่วน", productType: "สินค้าเทส",
+                orderDate: "2026-05-25", deadline: "2026-05-28", submitDate: "",
+                assignee: "บอส",
+                mediaVideos: ["คลิป 1:1 (มีกรอบข้อมูล)", "คลิป 9:16 (ไม่มีกรอบ) 1"],
+                mediaImages: ["ภาพ อัลบั้ม 4 ภาพ ขนาด 1:1 (เซ็ตที่ 1)"],
+                refText: "เน้นโทนสีชมพูขาว ให้ดูละมุน\nเพิ่มข้อความ 'โปรโมชั่นพิเศษ' ตัวใหญ่ๆ มุมขวา",
+                refImages: ["https://placehold.co/400x400/ffe4e6/be123c?text=Ref+1"],
+                workUrl: ""
+            },
+            {
+                sku: "SKU-002", image: "", name: "กระเป๋าสะพายข้าง",
+                status: "รอดำเนินการ", urgency: "ทั่วไป", productType: "สินค้าเก่า",
+                orderDate: "2026-05-28", deadline: "2026-06-02", submitDate: "",
+                assignee: "มอส",
+                mediaVideos: [],
+                mediaImages: ["ภาพ อัลบั้ม 4 ภาพ ขนาด 1:1 (เซ็ตที่ 1)", "ภาพ อัลบั้ม 4 ภาพ ขนาด 1:1 (เซ็ตที่ 2)"],
+                refText: "ทำรูปสินค้าพื้นขาวล้วน ตัดต่อเนียนๆ",
+                refImages: [],
+                workUrl: ""
+            },
+            {
+                sku: "SKU-003", image: "", name: "พัดลมมินิพกพา",
+                status: "เรียบร้อย", urgency: "ทั่วไป", productType: "สินค้าเทส",
+                orderDate: "2026-05-20", deadline: "2026-05-25", submitDate: "2026-05-24",
+                assignee: "เบ้น",
+                mediaVideos: ["คลิป 9:16 (มีกรอบข้อมูล)"],
+                mediaImages: [],
+                refText: "ทำคลิปรีวิวสั้นๆ เน้นความลมแรง",
+                refImages: [],
+                workUrl: "file:///C:/Users/BENZ/work/fan-mini.mp4"
+            }
+        ];
+
+        // --- UTILS ---
+        function showToast(type, text) {
+            const toast = document.getElementById('toast');
+            const iconWrap = document.getElementById('toast-icon-wrapper');
+            const icon = document.getElementById('toast-icon');
+            
+            if (type === 'success') {
+                iconWrap.className = 'inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600';
+                icon.className = 'fa-solid fa-check';
+            } else {
+                iconWrap.className = 'inline-flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl bg-blue-100 text-blue-600';
+                icon.className = 'fa-solid fa-info';
+            }
+            
+            document.getElementById('toast-message').innerText = text;
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => { 
+                toast.classList.remove('translate-y-0', 'opacity-100'); 
+                toast.classList.add('-translate-y-full', 'opacity-0'); 
+            }, 3000);
+        }
+
+        function copyToClipboard(text) {
+            if(!text) return;
+            const el = document.getElementById('hidden-clipboard');
+            el.classList.remove('hidden');
+            el.value = text;
+            el.select();
+            document.execCommand('copy');
+            el.classList.add('hidden');
+            showToast('success', 'คัดลอก URL เรียบร้อยแล้ว');
+        }
+
+        function calculateDays(startStr, endStr) {
+            if (!startStr) return "-";
+            const start = new Date(startStr);
+            // If completed, use submit date. If not, maybe use current date, but requirement says: วันที่สั่ง - วันที่ส่ง
+            if (endStr) {
+                const end = new Date(endStr);
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays === 0 ? "1 วัน" : `${diffDays} วัน`;
+            }
+            return '<span class="text-slate-400 text-[10px]">ยังไม่ส่งงาน</span>';
+        }
+
+        function getStatusBadge(status) {
+            if(status === 'เรียบร้อย') return `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">เรียบร้อย</span>`;
+            if(status === 'กำลังดำเนินการ') return `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">กำลังดำเนินการ</span>`;
+            return `<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">รอดำเนินการ</span>`;
+        }
+
+        function getUrgencyBadge(urgency) {
+            if(urgency === 'ด่วน') return `<span class="text-[10px] font-bold text-rose-600"><i class="fa-solid fa-bolt mr-1"></i>ด่วน</span>`;
+            return `<span class="text-[10px] font-bold text-slate-500">ทั่วไป</span>`;
+        }
+
+        function getProductTypeBadge(type) {
+            if(type === 'สินค้าเทส') return `<span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">สินค้าเทส</span>`;
+            return `<span class="text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-md border border-slate-200">สินค้าเก่า</span>`;
+        }
+
+        // --- CORE LOGIC ---
+        function calculateStats() {
+            let stats = { all: 0, wait: 0, prog: 0, done: 0 };
+            jobs.forEach(j => {
+                stats.all++;
+                if(j.status === 'รอดำเนินการ') stats.wait++;
+                else if(j.status === 'กำลังดำเนินการ') stats.prog++;
+                else if(j.status === 'เรียบร้อย') stats.done++;
+            });
+
+            document.getElementById('count-all').innerText = stats.all;
+            document.getElementById('count-wait').innerText = stats.wait;
+            document.getElementById('count-prog').innerText = stats.prog;
+            document.getElementById('count-done').innerText = stats.done;
+            document.getElementById('count-backlog').innerText = stats.wait + stats.prog;
+        }
+
+        function setStatusFilter(status) {
+            currentStatusFilter = status;
+            
+            // Reset active classes
+            ['ALL', 'wait', 'prog', 'backlog', 'done'].forEach(id => {
+                document.getElementById(`dash-${id}`).classList.remove('dash-card-active', 'dash-card-active-white');
+            });
+
+            // Set new active class
+            let map = {'ALL':'ALL', 'รอดำเนินการ':'wait', 'กำลังดำเนินการ':'prog', 'งานที่ค้าง':'backlog', 'เรียบร้อย':'done'};
+            let activeId = `dash-${map[status]}`;
+            if(status === 'ALL') {
+                document.getElementById(activeId).classList.add('dash-card-active-white');
+            } else {
+                document.getElementById(activeId).classList.add('dash-card-active-white'); // using white outline for colored cards
+            }
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const filterType = document.getElementById('filter-type').value;
+            const filterAssignee = document.getElementById('filter-assignee').value;
+            const filterMonth = document.getElementById('filter-month').value; // Format: YYYY-MM
+            const search = document.getElementById('filter-search').value.toLowerCase().trim();
+            
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            
+            let visibleCount = 0;
+
+            jobs.forEach((j, idx) => {
+                // Status Filter (Backlog = Wait + Prog)
+                if(currentStatusFilter !== 'ALL') {
+                    if(currentStatusFilter === 'งานที่ค้าง') {
+                        if(j.status === 'เรียบร้อย') return;
+                    } else {
+                        if(j.status !== currentStatusFilter) return;
+                    }
+                }
+
+                // Top Filters
+                if(filterType !== 'ALL' && j.productType !== filterType) return;
+                if(filterAssignee !== 'ALL' && j.assignee !== filterAssignee) return;
+                
+                if(filterMonth) {
+                    // Check if orderDate starts with selected YYYY-MM
+                    if(!j.orderDate.startsWith(filterMonth)) return;
+                }
+
+                if(search) {
+                    if(!j.sku.toLowerCase().includes(search) && !j.name.toLowerCase().includes(search)) return;
+                }
+
+                visibleCount++;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-indigo-50/30 transition-all border-b border-slate-100";
+                
+                const mediaCount = j.mediaVideos.length + j.mediaImages.length;
+                let mediaBtn = mediaCount > 0 
+                    ? `<button onclick="viewMedia(${idx})" class="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-list mr-1"></i>ดูสื่อ (${mediaCount})</button>`
+                    : `<span class="text-[10px] text-slate-300">-</span>`;
+
+                let refBtn = (j.refText || j.refImages.length > 0)
+                    ? `<button onclick="viewRef(${idx})" class="text-[10px] font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-200 transition-colors shadow-sm"><i class="fa-solid fa-eye mr-1"></i>ดูข้อมูล</button>`
+                    : `<span class="text-[10px] text-slate-300">ไม่มีอ้างอิง</span>`;
+                
+                let urlHtml = j.workUrl 
+                    ? `<div class="flex items-center justify-center space-x-1"><button onclick="copyToClipboard('${j.workUrl}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-100" title="คัดลอก URL"><i class="fa-regular fa-copy"></i></button></div>`
+                    : `<span class="text-[10px] text-slate-300">-</span>`;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-3 text-center">
+                        <button onclick="openFormModal(${idx})" class="px-2.5 py-1.5 bg-slate-100 hover:bg-indigo-100 text-indigo-600 rounded-lg shadow-sm"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                    </td>
+                    <td class="py-3 px-3 font-bold text-slate-900 text-xs">${j.sku}</td>
+                    <td class="py-3 px-3 text-center"><div class="w-10 h-10 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 mx-auto text-sm overflow-hidden">${j.image ? `<img src="${j.image}" class="w-full h-full object-cover">` : '<i class="fa-regular fa-image"></i>'}</div></td>
+                    <td class="py-3 px-3 font-bold text-slate-800 text-sm truncate max-w-[150px]" title="${j.name}">${j.name}</td>
+                    <td class="py-3 px-3 text-center">${getStatusBadge(j.status)}</td>
+                    <td class="py-3 px-3 text-center">${getUrgencyBadge(j.urgency)}</td>
+                    <td class="py-3 px-3 text-center">${getProductTypeBadge(j.productType)}</td>
+                    <td class="py-3 px-3 text-center font-medium text-xs">${j.orderDate || '-'}</td>
+                    <td class="py-3 px-3 text-center font-medium text-xs text-rose-500">${j.deadline || '-'}</td>
+                    <td class="py-3 px-3 text-center font-medium text-xs text-emerald-600">${j.submitDate || '-'}</td>
+                    <td class="py-3 px-3 text-center font-bold text-indigo-600 text-xs">${calculateDays(j.orderDate, j.submitDate)}</td>
+                    <td class="py-3 px-3 text-center">${mediaBtn}</td>
+                    <td class="py-3 px-3 font-bold text-slate-700 text-xs text-center">${j.assignee || '-'}</td>
+                    <td class="py-3 px-3 text-center">${refBtn}</td>
+                    <td class="py-3 px-3 text-center">${urlHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Toggle Empty State
+            if(visibleCount === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                document.getElementById('table-body').parentElement.parentElement.classList.add('hidden');
+            } else {
+                document.getElementById('empty-state').classList.add('hidden');
+                document.getElementById('table-body').parentElement.parentElement.classList.remove('hidden');
+            }
+        }
+
+        // --- FORM HANDLING ---
+        function openFormModal(idx = -1) {
+            const form = document.getElementById('queue-form');
+            form.reset();
+            document.getElementById('form-idx').value = idx;
+            document.getElementById('form-ref-files').value = ""; // clear file input
+
+            // Uncheck all media
+            document.querySelectorAll('input[name="media-vid"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[name="media-img"]').forEach(cb => cb.checked = false);
+
+            if(idx === -1) {
+                document.getElementById('modal-title').innerText = "เพิ่มคิวงานกราฟฟิกใหม่";
+                document.getElementById('form-order-date').value = new Date().toISOString().split('T')[0];
+            } else {
+                const j = jobs[idx];
+                document.getElementById('modal-title').innerText = "แก้ไขคิวงาน: " + j.sku;
+                document.getElementById('form-sku').value = j.sku;
+                document.getElementById('form-name').value = j.name;
+                document.getElementById('form-urgency').value = j.urgency;
+                document.getElementById('form-type').value = j.productType;
+                document.getElementById('form-assignee').value = j.assignee;
+                document.getElementById('form-order-date').value = j.orderDate;
+                document.getElementById('form-deadline').value = j.deadline;
+                document.getElementById('form-status').value = j.status;
+                document.getElementById('form-submit-date').value = j.submitDate;
+                document.getElementById('form-url').value = j.workUrl;
+                document.getElementById('form-ref-text').value = j.refText;
+
+                // Check corresponding media
+                j.mediaVideos.forEach(v => {
+                    const cb = document.querySelector(`input[name="media-vid"][value="${v}"]`);
+                    if(cb) cb.checked = true;
+                });
+                j.mediaImages.forEach(img => {
+                    const cb = document.querySelector(`input[name="media-img"][value="${img}"]`);
+                    if(cb) cb.checked = true;
+                });
+            }
+            
+            document.getElementById('form-modal').classList.remove('hidden');
+        }
+
+        function closeFormModal() {
+            document.getElementById('form-modal').classList.add('hidden');
+        }
+
+        function saveJob(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('form-idx').value);
+            
+            // Gather Media
+            let vids = [], imgs = [];
+            document.querySelectorAll('input[name="media-vid"]:checked').forEach(cb => vids.push(cb.value));
+            document.querySelectorAll('input[name="media-img"]:checked').forEach(cb => imgs.push(cb.value));
+
+            // Gather File (Mockup for UI)
+            const fileInput = document.getElementById('form-ref-files');
+            let tempImages = [];
+            if(idx !== -1) tempImages = jobs[idx].refImages; // keep old if exist
+            
+            if (fileInput.files.length > 0) {
+                tempImages = []; // override for demo
+                for(let i=0; i<fileInput.files.length; i++) {
+                    tempImages.push(URL.createObjectURL(fileInput.files[i]));
+                }
+            }
+
+            const data = {
+                sku: document.getElementById('form-sku').value.trim(),
+                name: document.getElementById('form-name').value.trim(),
+                image: idx !== -1 ? jobs[idx].image : "",
+                status: document.getElementById('form-status').value,
+                urgency: document.getElementById('form-urgency').value,
+                productType: document.getElementById('form-type').value,
+                orderDate: document.getElementById('form-order-date').value,
+                deadline: document.getElementById('form-deadline').value,
+                submitDate: document.getElementById('form-submit-date').value,
+                assignee: document.getElementById('form-assignee').value,
+                mediaVideos: vids,
+                mediaImages: imgs,
+                refText: document.getElementById('form-ref-text').value.trim(),
+                refImages: tempImages,
+                workUrl: document.getElementById('form-url').value.trim()
+            };
+
+            if(idx === -1) jobs.push(data);
+            else jobs[idx] = data;
+
+            closeFormModal();
+            showToast('success', 'บันทึกข้อมูลคิวงานเรียบร้อยแล้ว');
+            
+            calculateStats();
+            renderTable();
+        }
+
+        // --- VIEW MODALS ---
+        function viewMedia(idx) {
+            const j = jobs[idx];
+            let html = '';
+            
+            if(j.mediaVideos.length > 0) {
+                html += `<div class="mb-4">
+                    <h4 class="text-xs font-bold text-rose-500 mb-2 border-b border-rose-100 pb-1">1. งานคลิปวิดีโอ</h4>
+                    <ul class="space-y-1.5 pl-2 text-sm text-slate-700">`;
+                j.mediaVideos.forEach(v => html += `<li><i class="fa-solid fa-check text-emerald-500 mr-2 text-xs"></i>${v}</li>`);
+                html += `</ul></div>`;
+            }
+
+            if(j.mediaImages.length > 0) {
+                html += `<div>
+                    <h4 class="text-xs font-bold text-blue-500 mb-2 border-b border-blue-100 pb-1">2. งานรูปภาพ</h4>
+                    <ul class="space-y-1.5 pl-2 text-sm text-slate-700">`;
+                j.mediaImages.forEach(v => html += `<li><i class="fa-solid fa-check text-emerald-500 mr-2 text-xs"></i>${v}</li>`);
+                html += `</ul></div>`;
+            }
+
+            document.getElementById('media-content').innerHTML = html;
+            document.getElementById('view-media-modal').classList.remove('hidden');
+        }
+
+        function viewRef(idx) {
+            const j = jobs[idx];
+            document.getElementById('ref-text-content').innerText = j.refText || 'ไม่มีข้อความอธิบาย';
+            
+            const imgContainer = document.getElementById('ref-images-content');
+            if(j.refImages.length > 0) {
+                imgContainer.innerHTML = j.refImages.map(src => `<a href="${src}" target="_blank" class="block aspect-square rounded-xl overflow-hidden border border-slate-200 hover:border-indigo-400 transition-colors"><img src="${src}" class="w-full h-full object-cover"></a>`).join('');
+            } else {
+                imgContainer.innerHTML = `<div class="col-span-full text-center py-6 bg-slate-50 rounded-xl text-slate-400 text-xs border border-dashed border-slate-300">ไม่มีรูปภาพแนบ</div>`;
+            }
+            
+            document.getElementById('view-ref-modal').classList.remove('hidden');
+        }
+
+        // --- INIT ---
+        window.onload = function() {
+            calculateStats();
+            renderTable();
+        };
+    </script>
+</body>
+</html>

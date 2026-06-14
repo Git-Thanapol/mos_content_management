@@ -1,0 +1,124 @@
+{% extends "producttest/_base.html" %}
+{% block title %}รายการทดสอบสินค้า{% endblock %}
+
+{% block content %}
+<!-- Dashboard stat cards -->
+<div class="row g-3 mb-3">
+    {% with filters=request.GET.urlencode %}
+    {% for label,key,color,icon,val in stat_cards %}
+    <div class="col-6 col-lg-2">
+        <div class="stat-card p-3 text-white {{ color }} {% if current_status == key %}active{% endif %}"
+             hx-get="{% url 'product_table_partial' %}?status={{ key }}&employee={{ current_employee }}&q={{ current_q }}&date_from={{ request.GET.date_from }}&date_to={{ request.GET.date_to }}"
+             hx-target="#product-table"
+             hx-swap="innerHTML"
+             hx-push-url="false"
+             onclick="setActiveStatCard(this, '{{ key }}')">
+            <div class="d-flex justify-content-between align-items-start">
+                <small class="text-uppercase fw-bold opacity-75" style="font-size:.65rem">{{ label }}</small>
+                <i class="fa-solid {{ icon }} opacity-25 fa-lg"></i>
+            </div>
+            <div class="display-6 fw-bold mt-1" id="stat-{{ key }}">{{ val }}</div>
+        </div>
+    </div>
+    {% endfor %}
+    {% endwith %}
+</div>
+
+<!-- Filter bar -->
+<div class="card border-0 shadow-sm rounded-3 mb-3">
+    <div class="card-body py-3">
+        <form id="filter-form" class="row g-2 align-items-end">
+            <input type="hidden" name="status" id="hidden-status" value="{{ current_status }}">
+            <div class="col-12 col-sm-6 col-md-3">
+                <select name="employee" class="form-select form-select-sm"
+                        hx-get="{% url 'product_table_partial' %}"
+                        hx-target="#product-table"
+                        hx-include="#filter-form"
+                        hx-trigger="change">
+                    <option value="ALL" {% if current_employee == "ALL" %}selected{% endif %}>กรองพนักงาน (ทั้งหมด)</option>
+                    {% for emp in employees %}
+                    <option value="{{ emp.name }}" {% if current_employee == emp.name %}selected{% endif %}>{{ emp.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <input type="text" name="q" value="{{ current_q }}" placeholder="ค้นหาชื่อ / ID..."
+                       class="form-control form-control-sm"
+                       hx-get="{% url 'product_table_partial' %}"
+                       hx-target="#product-table"
+                       hx-include="#filter-form"
+                       hx-trigger="keyup changed delay:400ms">
+            </div>
+            <div class="col-6 col-md-2">
+                {{ date_form.date_from }}
+            </div>
+            <div class="col-6 col-md-2">
+                {{ date_form.date_to }}
+            </div>
+            <div class="col-12 col-md-2 text-end">
+                <button type="button" class="btn btn-primary btn-sm fw-bold w-100"
+                        hx-get="{% url 'product_add' %}"
+                        hx-target="#modal-container"
+                        hx-swap="innerHTML">
+                    <i class="fa-solid fa-plus-circle me-1"></i>เพิ่มสินค้าทดสอบ
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead style="background:#f1f5f9">
+                <tr style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#475569;border-bottom:1px solid #e2e8f0">
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">เลือก</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">Product ID</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">รูปสินค้า</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ชื่อสินค้า</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ข้อมูลสินค้า / รายละเอียด</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">ราคาทดสอบ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่ลงข้อมูล</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่เริ่มทดสอบ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่สิ้นสุดทดสอบ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">จำนวนวันที่ทดสอบ</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">Graphic</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">MKT</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">PAGE</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">สถานะการทดสอบ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">การจัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="product-table"
+                   hx-get="{% url 'product_table_partial' %}?status={{ current_status }}&employee={{ current_employee }}&q={{ current_q }}"
+                   hx-trigger="load, refresh"
+                   hx-swap="innerHTML">
+                <tr><td colspan="15" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal container -->
+<div id="modal-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function setActiveStatCard(el, status) {
+    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('hidden-status').value = status;
+}
+
+// Date range filter auto-submit
+document.querySelectorAll('[name="date_from"],[name="date_to"]').forEach(el => {
+    el.addEventListener('change', () => {
+        htmx.trigger('#product-table', 'refresh');
+    });
+});
+
+// Modal open/close handled globally in base.html
+</script>
+{% endblock %}

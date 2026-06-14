@@ -1,0 +1,153 @@
+{% load producttest_tags %}
+{% if no_profile %}
+<div class="text-center py-5 text-muted">
+    <i class="fa-solid fa-user-slash fa-2x mb-2 d-block opacity-30"></i>
+    <p class="small">บัญชีนี้ยังไม่มีโปรไฟล์พนักงาน กรุณาติดต่อผู้ดูแลระบบ</p>
+</div>
+{% else %}
+<!-- Stat cards -->
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg">
+        <div class="stat-card p-3 text-white bg-secondary"
+             hx-get="{% url 'report_table_partial' %}"
+             hx-vals='{"status":"ALL"}'
+             hx-include="#report-filter-form"
+             hx-target="#report-section"
+             hx-swap="innerHTML">
+            <div class="fw-bold opacity-75 text-uppercase" style="font-size:.62rem">รายการทั้งหมด</div>
+            <div class="display-6 fw-bold mt-1">{{ stats.total }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card p-3 rounded-3 border-2" style="background:#f0fdf4;border-color:#bbf7d0"
+             hx-get="{% url 'report_table_partial' %}"
+             hx-vals='{"status":"ทดสอบผ่าน"}'
+             hx-include="#report-filter-form"
+             hx-target="#report-section"
+             hx-swap="innerHTML">
+            <div class="fw-bold text-success text-uppercase" style="font-size:.62rem">ทดสอบผ่าน</div>
+            <div class="d-flex align-items-baseline gap-2 mt-1">
+                <span class="display-6 fw-bold text-success">{{ stats.passed }}</span>
+                <span class="text-success fw-bold">({{ stats.pass_pct }}%)</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card p-3 rounded-3 border-2" style="background:#fff1f2;border-color:#fecdd3"
+             hx-get="{% url 'report_table_partial' %}"
+             hx-vals='{"status":"ทดสอบไม่ผ่าน"}'
+             hx-include="#report-filter-form"
+             hx-target="#report-section"
+             hx-swap="innerHTML">
+            <div class="fw-bold text-danger text-uppercase" style="font-size:.62rem">ทดสอบไม่ผ่าน</div>
+            <div class="d-flex align-items-baseline gap-2 mt-1">
+                <span class="display-6 fw-bold text-danger">{{ stats.failed }}</span>
+                <span class="text-danger fw-bold">({{ stats.fail_pct }}%)</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="stat-card p-3 rounded-3 border-2" style="background:#fffbeb;border-color:#fde68a"
+             hx-get="{% url 'report_table_partial' %}"
+             hx-vals='{"status":"สถานะรอกรอกค่าคอม"}'
+             hx-include="#report-filter-form"
+             hx-target="#report-section"
+             hx-swap="innerHTML">
+            <div class="fw-bold text-warning text-uppercase" style="font-size:.62rem">รอกรอกค่าคอม</div>
+            <div class="display-6 fw-bold text-warning mt-1">{{ stats.wait_comm }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="rounded-3 p-3 text-white text-end" style="background:#4f46e5">
+            <div class="fw-bold opacity-80 text-uppercase" style="font-size:.62rem">ค่าคอมสะสมที่ได้</div>
+            <div class="display-6 fw-bold mt-1">{{ stats.total_earned|format_decimal }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Product ID</th>
+                    <th class="text-center">รูป</th>
+                    <th>ชื่อสินค้า</th>
+                    <th>ข้อมูล</th>
+                    <th class="text-center">ราคา</th>
+                    <th class="text-center">วันที่ลง</th>
+                    <th class="text-center">เริ่ม</th>
+                    <th class="text-center">สิ้นสุด</th>
+                    <th class="text-center">วัน</th>
+                    <th>Graphic</th>
+                    <th>MKT</th>
+                    <th class="text-center">PAGE</th>
+                    <th class="text-center">สถานะ</th>
+                    <th class="text-end">ค่าคอม</th>
+                    <th class="text-center">สถานะคอม</th>
+                    <th>หมายเหตุ</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in products %}
+            {% with comm=p.commission %}
+            <tr>
+                <td class="ps-3 fw-bold text-dark">{{ p.pid }}</td>
+                <td class="text-center">
+                    {% if p.image %}<img src="{{ p.image.url }}" class="rounded" style="width:36px;height:36px;object-fit:cover">
+                    {% else %}<div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto" style="width:36px;height:36px"><i class="fa-regular fa-image text-secondary"></i></div>{% endif %}
+                </td>
+                <td class="fw-semibold small">{{ p.name }}</td>
+                <td style="font-size:.7rem;max-width:120px" class="text-muted">
+                    <div class="fw-bold text-dark text-truncate">{{ p.info|default:"-" }}</div>
+                    <div class="text-truncate">{{ p.detail|default:"" }}</div>
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-danger px-2 py-1 position-relative"
+                            hx-get="{% url 'product_prices' p.pk %}"
+                            hx-target="#modal-container" hx-swap="innerHTML">
+                        <i class="fa-solid fa-bullhorn fa-sm"></i>
+                        {% if p.prices.count > 0 %}<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark" style="font-size:.5rem">{{ p.prices.count }}</span>{% endif %}
+                    </button>
+                </td>
+                <td class="text-center" style="font-size:.7rem">{{ p.upload_date|thai_date }}</td>
+                <td class="text-center text-primary" style="font-size:.7rem">{{ p.start_date|thai_date }}</td>
+                <td class="text-center text-danger" style="font-size:.7rem">{{ p.end_date|thai_date }}</td>
+                <td class="text-center fw-bold" style="font-size:.7rem">{% if p.test_days %}{{ p.test_days }}d{% else %}-{% endif %}</td>
+                <td style="font-size:.7rem;font-weight:600">{% for g in p.graphic_members.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td>
+                <td style="font-size:.7rem;font-weight:600">{% for m in p.mkt_members.all %}{{ m.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td>
+                <td class="text-center">
+                    {% if p.pages.count > 0 %}<button class="btn btn-sm btn-outline-primary px-2 py-1" hx-get="{% url 'product_pages' p.pk %}" hx-target="#modal-container" hx-swap="innerHTML" style="font-size:.65rem">PAGE ({{ p.pages.count }})</button>
+                    {% else %}<span class="text-muted small">-</span>{% endif %}
+                </td>
+                <td class="text-center">
+                    {% with st=p.computed_status %}
+                    {% if st == "Test ผ่าน" %}<span class="status-badge bg-success-subtle text-success border border-success-subtle">ผ่าน</span>
+                    {% elif st == "Test ไม่ผ่าน" %}<span class="status-badge bg-danger-subtle text-danger border border-danger-subtle">ไม่ผ่าน</span>
+                    {% elif st == "ยกเลิก" %}<span class="status-badge bg-dark text-white">ยกเลิก</span>
+                    {% elif st == "กำลังดำเนินการ" %}<span class="status-badge bg-warning-subtle text-warning border border-warning-subtle">กำลังดำเนินการ</span>
+                    {% else %}<span class="status-badge bg-secondary-subtle text-secondary border border-secondary-subtle">รอดำเนินการ</span>
+                    {% endif %}
+                    {% endwith %}
+                </td>
+                <td class="text-end fw-bold text-success small">
+                    {% if comm.status == "จ่ายค่าคอมเรียบร้อย" %}{{ comm.per_person|format_decimal }}{% else %}-{% endif %}
+                </td>
+                <td class="text-center">
+                    {% if comm.status == "จ่ายค่าคอมเรียบร้อย" %}<span class="status-badge bg-success-subtle text-success border border-success-subtle">จ่ายเรียบร้อย</span>
+                    {% elif comm.status == "รอจ่ายค่าคอม" %}<span class="status-badge bg-primary-subtle text-primary border border-primary-subtle">รอจ่าย</span>
+                    {% else %}<span class="status-badge bg-warning-subtle text-warning border border-warning-subtle">รอกรอก</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:.7rem;max-width:100px" class="text-muted text-truncate">{{ comm.note|default:"-" }}</td>
+            </tr>
+            {% endwith %}
+            {% empty %}
+            <tr><td colspan="16" class="text-center py-5 text-muted">ไม่พบข้อมูล</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}

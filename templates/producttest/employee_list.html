@@ -1,0 +1,41 @@
+{% extends "producttest/_base.html" %}
+{% block title %}จัดการพนักงาน{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="fa-solid fa-users-gear text-primary me-2"></i>จัดการพนักงาน</h5>
+    <button class="btn btn-primary btn-sm fw-bold"
+            hx-get="{% url 'employee_add' %}"
+            hx-target="#modal-container"
+            hx-swap="innerHTML">
+        <i class="fa-solid fa-plus-circle me-1"></i>เพิ่มพนักงาน
+    </button>
+</div>
+
+<div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">ชื่อ</th>
+                    <th class="text-center">Graphic</th>
+                    <th class="text-center">MKT</th>
+                    <th class="text-center">สถานะ</th>
+                    <th class="text-center">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="employee-rows">
+                {% include "producttest/partials/employee_rows.html" %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Modal open/close handled globally in base.html
+</script>
+{% endblock %}

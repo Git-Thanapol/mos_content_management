@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ — Product Test Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Prompt', sans-serif; background: #0f172a; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+<div class="card shadow-lg border-0 rounded-4" style="max-width:400px;width:100%;margin:1rem">
+    <div class="card-body p-5">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-3" style="width:56px;height:56px;background:#4f46e5">
+                <i class="fa-solid fa-flask-vial text-white fa-lg"></i>
+            </div>
+            <h4 class="fw-bold mb-0">Product Test Center</h4>
+            <small class="text-muted">ระบบวิเคราะห์สินค้าทดสอบ</small>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-danger alert-sm py-2 text-sm">
+            <i class="fa-solid fa-circle-exclamation me-1"></i>ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold small">ชื่อผู้ใช้</label>
+                <input type="text" name="username" autofocus class="form-control" required>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold small">รหัสผ่าน</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2">
+                <i class="fa-solid fa-right-to-bracket me-2"></i>เข้าสู่ระบบ
+            </button>
+            <input type="hidden" name="next" value="{{ next }}">
+        </form>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

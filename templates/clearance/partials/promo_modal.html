@@ -1,0 +1,144 @@
+<div class="modal fade" id="promoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <!-- Header -->
+            <div class="modal-header text-white border-0" style="background:#0f172a">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0">
+                        <i class="fa-solid fa-bullhorn me-2"></i>ตั้งค่าตารางโปรโมชั่น เก่า / ใหม่
+                    </h5>
+                    <p class="mb-0 opacity-50" style="font-size:.75rem">
+                        รหัสสินค้า: {{ product.product_code }}
+                        {% if product.product_name %} — {{ product.product_name }}{% endif %}
+                    </p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Form -->
+            <form method="post"
+                  action="{% url 'clearance:promo_modal' product.pk %}"
+                  hx-post="{% url 'clearance:promo_modal' product.pk %}"
+                  hx-target="#modal-container"
+                  hx-swap="innerHTML">
+                {% csrf_token %}
+                <input type="hidden" name="promos_json" id="promos-json-input">
+
+                <div class="modal-body px-4 py-3">
+                    <!-- Column headers -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-5">
+                            <div class="text-center py-1 rounded-2"
+                                 style="background:#0f172a;color:#f87171;font-size:.75rem;font-weight:700">
+                                ราคาโปรโมชั่นเดิม
+                            </div>
+                        </div>
+                        <div class="col-1"></div>
+                        <div class="col-5">
+                            <div class="text-center py-1 rounded-2"
+                                 style="background:#0f172a;color:#4ade80;font-size:.75rem;font-weight:700">
+                                ราคาลดพิเศษล้างสต็อก
+                            </div>
+                        </div>
+                        <div class="col-1"></div>
+                    </div>
+
+                    <!-- Promo rows -->
+                    <div id="promo-rows-container">
+                        {% for promo in promos %}
+                        <div class="row g-2 mb-2 align-items-center promo-row">
+                            <div class="col-5">
+                                <input type="text" class="form-control form-control-sm promo-old"
+                                       value="{{ promo.old_price }}"
+                                       placeholder="โปรโมชั่นเดิม..."
+                                       style="color:#dc2626">
+                            </div>
+                            <div class="col-1 text-center text-muted fw-bold">➔</div>
+                            <div class="col-5">
+                                <input type="text" class="form-control form-control-sm promo-new"
+                                       value="{{ promo.new_price }}"
+                                       placeholder="โปรโมชั่นใหม่..."
+                                       style="color:#16a34a">
+                            </div>
+                            <div class="col-1 text-center">
+                                <button type="button" class="btn btn-sm btn-light" onclick="removePromoRow(this)">
+                                    <i class="fa-solid fa-circle-xmark text-danger" style="font-size:.8rem"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <!-- Start with one blank row -->
+                        <div class="row g-2 mb-2 align-items-center promo-row">
+                            <div class="col-5">
+                                <input type="text" class="form-control form-control-sm promo-old"
+                                       placeholder="โปรโมชั่นเดิม..." style="color:#dc2626">
+                            </div>
+                            <div class="col-1 text-center text-muted fw-bold">➔</div>
+                            <div class="col-5">
+                                <input type="text" class="form-control form-control-sm promo-new"
+                                       placeholder="โปรโมชั่นใหม่..." style="color:#16a34a">
+                            </div>
+                            <div class="col-1 text-center">
+                                <button type="button" class="btn btn-sm btn-light" onclick="removePromoRow(this)">
+                                    <i class="fa-solid fa-circle-xmark text-danger" style="font-size:.8rem"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Add row button -->
+                    <button type="button" onclick="addPromoRow()"
+                            class="btn btn-outline-secondary btn-sm w-100 mt-1" style="border-style:dashed">
+                        <i class="fa-solid fa-plus-circle me-1"></i>เพิ่มแถวรายการโปรโมชั่น
+                    </button>
+                </div>
+
+                <div class="modal-footer border-0 justify-content-between pt-0">
+                    <button type="button" onclick="clearAllPromos()"
+                            class="btn btn-outline-danger btn-sm">
+                        <i class="fa-solid fa-trash-can me-1"></i>ลบทั้งหมด
+                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-light btn-sm fw-bold" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-success btn-sm fw-bold" onclick="collectPromos()">
+                            <i class="fa-solid fa-floppy-disk me-1"></i>บันทึกข้อมูล
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function addPromoRow() {
+    const tpl = `<div class="row g-2 mb-2 align-items-center promo-row">
+        <div class="col-5"><input type="text" class="form-control form-control-sm promo-old" placeholder="โปรโมชั่นเดิม..." style="color:#dc2626"></div>
+        <div class="col-1 text-center text-muted fw-bold">➔</div>
+        <div class="col-5"><input type="text" class="form-control form-control-sm promo-new" placeholder="โปรโมชั่นใหม่..." style="color:#16a34a"></div>
+        <div class="col-1 text-center"><button type="button" class="btn btn-sm btn-light" onclick="removePromoRow(this)"><i class="fa-solid fa-circle-xmark text-danger" style="font-size:.8rem"></i></button></div>
+    </div>`;
+    document.getElementById('promo-rows-container').insertAdjacentHTML('beforeend', tpl);
+}
+
+function removePromoRow(btn) {
+    btn.closest('.promo-row').remove();
+}
+
+function clearAllPromos() {
+    document.getElementById('promo-rows-container').innerHTML = '';
+    addPromoRow();
+}
+
+function collectPromos() {
+    const rows = document.querySelectorAll('.promo-row');
+    const data = [];
+    rows.forEach(row => {
+        const old = (row.querySelector('.promo-old')?.value || '').trim();
+        const nw  = (row.querySelector('.promo-new')?.value || '').trim();
+        if (old || nw) data.push({old, new: nw});
+    });
+    document.getElementById('promos-json-input').value = JSON.stringify(data);
+}
+</script>

@@ -1,0 +1,227 @@
+<div class="modal fade" id="queueFormModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+
+            <!-- Header -->
+            <div class="modal-header border-0 text-white" style="background:#1e1b4b">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center justify-content-center rounded-2"
+                         style="width:36px;height:36px;background:#4f46e5">
+                        <i class="fa-solid fa-paintbrush text-white"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold mb-0">
+                        {% if instance %}แก้ไขคิวงาน: {{ instance.sku }}{% else %}เพิ่มคิวงานกราฟฟิกใหม่{% endif %}
+                    </h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Form -->
+            <form id="queue-main-form"
+                  method="post"
+                  enctype="multipart/form-data"
+                  action="{% if instance %}{% url 'graphicqueue:queue_edit' instance.pk %}{% else %}{% url 'graphicqueue:queue_add' %}{% endif %}"
+                  hx-post="{% if instance %}{% url 'graphicqueue:queue_edit' instance.pk %}{% else %}{% url 'graphicqueue:queue_add' %}{% endif %}"
+                  hx-target="#modal-container"
+                  hx-swap="innerHTML"
+                  hx-encoding="multipart/form-data"
+                  style="display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden">
+                {% csrf_token %}
+
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+
+                        <!-- ── LEFT COLUMN ── -->
+                        <div class="col-12 col-md-5">
+
+                            <!-- General info box -->
+                            <div class="rounded-3 p-3 mb-3" style="background:#f8fafc;border:1px solid #e2e8f0">
+                                <h6 class="text-uppercase fw-bold mb-3" style="font-size:.68rem;color:#4f46e5;border-bottom:1px solid #e0e7ff;padding-bottom:.4rem">
+                                    <i class="fa-solid fa-info-circle me-1"></i>ข้อมูลทั่วไป
+                                </h6>
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold small mb-1">SKU *</label>
+                                    {{ form.sku }}
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold small mb-1">ชื่อสินค้า *</label>
+                                    {{ form.name }}
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold small mb-1">รูปสินค้า</label>
+                                    {{ form.image }}
+                                    {% if instance and instance.image %}
+                                    <div class="mt-1">
+                                        <img src="{{ instance.image.url }}" style="height:50px;border-radius:6px;border:1px solid #e2e8f0">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold small mb-1">ประเภทงาน</label>
+                                        {{ form.urgency }}
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold small mb-1">ประเภทสินค้า</label>
+                                        {{ form.product_type }}
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold small mb-1">ผู้รับผิดชอบ *</label>
+                                    {{ form.assignee }}
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold small mb-1">วันที่สั่งงาน *</label>
+                                        {{ form.order_date }}
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold small mb-1">วันเดดไลน์ *</label>
+                                        {{ form.deadline }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status / Result box -->
+                            <div class="rounded-3 p-3" style="background:#eef2ff;border:1px solid #c7d2fe">
+                                <h6 class="text-uppercase fw-bold mb-3" style="font-size:.68rem;color:#3730a3;border-bottom:1px solid #c7d2fe;padding-bottom:.4rem">
+                                    <i class="fa-solid fa-flag-checkered me-1"></i>สถานะและผลงาน
+                                </h6>
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold small mb-1">สถานะงาน</label>
+                                    {{ form.status }}
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold small mb-1">วันที่ส่งงาน (ถ้าเสร็จแล้ว)</label>
+                                    {{ form.submit_date }}
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label fw-semibold small mb-1">ลิ้งค์ส่งงาน URL</label>
+                                    {{ form.work_url }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── RIGHT COLUMN ── -->
+                        <div class="col-12 col-md-7">
+
+                            <!-- Media checkboxes -->
+                            <div class="rounded-3 p-3 mb-3" style="border:1px solid #e2e8f0">
+                                <h6 class="text-uppercase fw-bold mb-3" style="font-size:.68rem;color:#334155;border-bottom:1px solid #e2e8f0;padding-bottom:.4rem">
+                                    <i class="fa-solid fa-photo-film me-1 text-muted"></i>หัวข้อ สื่อที่ต้องการทำ
+                                </h6>
+
+                                <div id="media-options">
+                                    {% include "graphicqueue/partials/media_options.html" %}
+                                </div>
+
+                                <!-- Add new media type freetext -->
+                                <div class="mt-3 pt-2" style="border-top:1px dashed #e2e8f0">
+                                    <small class="text-muted fw-bold d-block mb-2" style="font-size:.68rem">เพิ่มประเภทสื่อใหม่:</small>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="text" name="new_type_name" id="new-type-name"
+                                               class="form-control form-control-sm"
+                                               placeholder="ชื่อประเภทสื่อใหม่..."
+                                               style="flex:1">
+                                        <select name="new_type_category" class="form-select form-select-sm" style="width:100px">
+                                            <option value="video">คลิป</option>
+                                            <option value="image">รูปภาพ</option>
+                                        </select>
+                                        <button type="button"
+                                                class="btn btn-sm fw-bold"
+                                                style="background:#4f46e5;color:white;white-space:nowrap"
+                                                hx-post="{% url 'graphicqueue:media_type_add' %}"
+                                                hx-target="#media-options"
+                                                hx-swap="innerHTML"
+                                                hx-include="#media-options input[type=checkbox], [name=new_type_name], [name=new_type_category], [name=csrfmiddlewaretoken]">
+                                            <i class="fa-solid fa-plus me-1"></i>เพิ่ม
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reference images -->
+                            <div class="rounded-3 p-3" style="background:#f8fafc;border:1px solid #e2e8f0">
+                                <h6 class="text-uppercase fw-bold mb-3" style="font-size:.68rem;color:#334155;border-bottom:1px solid #e2e8f0;padding-bottom:.4rem">
+                                    <i class="fa-solid fa-book-open me-1 text-muted"></i>ข้อมูลสื่ออ้างอิง (รูป + Brief 1:1)
+                                </h6>
+
+                                <!-- Existing ref images (edit mode) -->
+                                {% if existing_refs %}
+                                <div class="mb-3">
+                                    <small class="text-muted fw-bold d-block mb-2" style="font-size:.68rem">รูปอ้างอิงที่มีอยู่:</small>
+                                    {% for ref in existing_refs %}
+                                    <div class="d-flex align-items-start gap-2 mb-2 p-2 rounded-2" style="background:#fff;border:1px solid #e2e8f0">
+                                        <a href="{{ ref.image.url }}" target="_blank">
+                                            <img src="{{ ref.image.url }}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;flex-shrink:0">
+                                        </a>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1 small text-muted" style="font-size:.75rem;white-space:pre-wrap">{{ ref.brief|default:"(ไม่มี brief)" }}</p>
+                                            <div class="form-check">
+                                                <input type="checkbox" name="delete_ref_ids" value="{{ ref.pk }}"
+                                                       class="form-check-input" id="del-{{ ref.pk }}">
+                                                <label for="del-{{ ref.pk }}" class="form-check-label small text-danger" style="font-size:.72rem">
+                                                    <i class="fa-solid fa-trash-can me-1"></i>ลบรูปนี้
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <!-- New ref image rows -->
+                                <small class="text-muted fw-bold d-block mb-2" style="font-size:.68rem">เพิ่มรูปอ้างอิงใหม่:</small>
+                                <div id="new-ref-container"></div>
+
+                                <button type="button" onclick="addRefRow()"
+                                        class="btn btn-sm btn-outline-secondary w-100 mt-1"
+                                        style="border-style:dashed;font-size:.78rem">
+                                    <i class="fa-solid fa-plus me-1"></i>เพิ่มรูปอ้างอิง
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger mt-3 py-2 small">
+                        {% for field, errors in form.errors.items %}{% for e in errors %}<div>{{ e }}</div>{% endfor %}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm fw-bold" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-sm fw-bold text-white" style="background:#4f46e5">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>บันทึกข้อมูลคิวงาน
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function addRefRow() {
+    const tpl = `<div class="d-flex gap-2 align-items-start mb-2 new-ref-row">
+        <input type="file" name="ref_images" accept="image/*"
+               class="form-control form-control-sm" style="width:200px;flex-shrink:0">
+        <input type="text" name="ref_briefs"
+               class="form-control form-control-sm"
+               placeholder="Brief อธิบายรูปนี้...">
+        <button type="button" onclick="this.closest('.new-ref-row').remove()"
+                class="btn btn-sm btn-light flex-shrink-0">
+            <i class="fa-solid fa-trash-can text-danger" style="font-size:.75rem"></i>
+        </button>
+    </div>`;
+    document.getElementById('new-ref-container').insertAdjacentHTML('beforeend', tpl);
+}
+
+// Clear the new-type name input after HTMX swap
+document.body.addEventListener('htmx:afterSwap', function(e) {
+    if (e.target.id === 'media-options') {
+        const inp = document.getElementById('new-type-name');
+        if (inp) inp.value = '';
+    }
+});
+</script>

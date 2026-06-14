@@ -1,0 +1,112 @@
+{% extends "producttest/_base.html" %}
+{% block title %}ระบบจัดการของหัวหน้า{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="rounded-4 p-4 mb-3 text-white" style="background:#1e1b4b">
+    <h4 class="fw-bold mb-1"><i class="fa-solid fa-user-shield me-2 text-indigo-300"></i>ระบบจัดการของหัวหน้า</h4>
+    <p class="mb-0 opacity-75 small">ตรวจสอบสถานะการทดสอบ ปรับผลลัพธ์ และจัดการค่าคอมมิชชั่น</p>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-3">
+    {% for label,key,color,icon,val in sup_stat_cards %}
+    <div class="col-6 col-lg">
+        <div class="stat-card p-3 text-white {{ color }} {% if current_status == key %}active{% endif %}"
+             hx-get="{% url 'supervisor_table_partial' %}?status={{ key }}&employee={{ current_employee }}&q={{ current_q }}&date_from={{ request.GET.date_from }}&date_to={{ request.GET.date_to }}"
+             hx-target="#supervisor-table"
+             hx-swap="innerHTML"
+             onclick="this.closest('.row').querySelectorAll('.stat-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+            <div class="d-flex justify-content-between">
+                <small class="text-uppercase fw-bold opacity-75" style="font-size:.62rem">{{ label }}</small>
+                <i class="fa-solid {{ icon }} opacity-25"></i>
+            </div>
+            <div class="display-6 fw-bold mt-1">{{ val }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Filter bar -->
+<div class="card border-0 shadow-sm rounded-3 mb-3">
+    <div class="card-body py-3">
+        <form id="sup-filter-form" class="row g-2 align-items-end">
+            <input type="hidden" name="status" id="sup-hidden-status" value="{{ current_status }}">
+            <div class="col-12 col-sm-6 col-md-3">
+                <select name="employee" class="form-select form-select-sm"
+                        hx-get="{% url 'supervisor_table_partial' %}"
+                        hx-target="#supervisor-table"
+                        hx-include="#sup-filter-form"
+                        hx-trigger="change">
+                    <option value="ALL">กรองพนักงาน (ทั้งหมด)</option>
+                    {% for emp in employees %}
+                    <option value="{{ emp.name }}" {% if current_employee == emp.name %}selected{% endif %}>{{ emp.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <input type="text" name="q" value="{{ current_q }}" placeholder="ค้นหา..."
+                       class="form-control form-control-sm"
+                       hx-get="{% url 'supervisor_table_partial' %}"
+                       hx-target="#supervisor-table"
+                       hx-include="#sup-filter-form"
+                       hx-trigger="keyup changed delay:400ms">
+            </div>
+            <div class="col-6 col-md-2">{{ date_form.date_from }}</div>
+            <div class="col-6 col-md-2">{{ date_form.date_to }}</div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table mb-0" style="border-collapse:collapse">
+            <thead style="background:#f1f5f9">
+                <tr style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#475569;border-bottom:1px solid #e2e8f0">
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">เลือก</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">Product ID</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">รูปสินค้า</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ชื่อสินค้า</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ข้อมูลสินค้า / รายละเอียด</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">ราคาทดสอบ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่ลงข้อมูล</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่เริ่มทดสอบ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่สิ้นสุดทดสอบ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">จำนวนวันที่ทดสอบ</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">Graphic</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">MKT</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">PAGE</th>
+                    <th class="py-3 px-3 text-end" style="white-space:nowrap;background:#eef2ff;border-left:1px solid #c7d2fe">จำนวนออเดอร์</th>
+                    <th class="py-3 px-3 text-end" style="white-space:nowrap;background:#eef2ff">ยอดขาย</th>
+                    <th class="py-3 px-3 text-end" style="white-space:nowrap;background:#eef2ff">ค่าโฆษณา</th>
+                    <th class="py-3 px-3 text-end" style="white-space:nowrap;background:#eef2ff;border-right:1px solid #c7d2fe">กำไร</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">สถานะการทดสอบ</th>
+                    <th class="py-3 px-3 text-end" style="white-space:nowrap">ค่าคอมมิชชั่น</th>
+                    <th class="py-3 px-4 text-center" style="white-space:nowrap">สถานะค่าคอม</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">หมายเหตุ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">การจัดการ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">หลักฐานโอน</th>
+                </tr>
+            </thead>
+            <tbody id="supervisor-table"
+                   hx-get="{% url 'supervisor_table_partial' %}?status={{ current_status }}&employee={{ current_employee }}&q={{ current_q }}"
+                   hx-trigger="load, refresh"
+                   hx-swap="innerHTML">
+                <tr><td colspan="23" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[name="date_from"],[name="date_to"]').forEach(el => {
+    el.addEventListener('change', () => htmx.trigger('#supervisor-table', 'refresh'));
+});
+// Modal open/close handled globally in base.html
+</script>
+{% endblock %}

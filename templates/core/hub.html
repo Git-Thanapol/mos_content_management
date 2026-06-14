@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}MOS CMS — เลือกระบบ{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column align-items-center justify-content-center" style="min-height:60vh">
+    <div class="text-center mb-5">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-4 mb-3 shadow-sm"
+             style="width:72px;height:72px;background:#334155">
+            <i class="fa-solid fa-cube text-white fa-2x"></i>
+        </div>
+        <h2 class="fw-bold mb-1">MOS CMS</h2>
+        <p class="text-muted">สวัสดี <strong>{{ request.user.username }}</strong> — เลือกระบบที่ต้องการใช้งาน</p>
+    </div>
+
+    {% if systems %}
+    <div class="row g-4 justify-content-center" style="max-width:960px;width:100%">
+        {% for sys in systems %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <a href="{% url sys.url_name %}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm rounded-4 h-100 system-card" style="transition:transform .15s,box-shadow .15s">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="d-flex align-items-center justify-content-center rounded-3"
+                                 style="width:48px;height:48px;background:{{ sys.color }}">
+                                <i class="fa-solid {{ sys.icon }} text-white fa-lg"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="color:{{ sys.color }};font-size:.95rem">{{ sys.name }}</div>
+                                <div class="text-muted" style="font-size:.75rem">{{ sys.name_th }}</div>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-0" style="font-size:.82rem;line-height:1.6">{{ sys.description }}</p>
+                    </div>
+                    <div class="card-footer border-0 bg-transparent pb-3 px-4">
+                        <span class="btn btn-sm fw-bold w-100 text-white" style="background:{{ sys.color }}">
+                            <i class="fa-solid fa-arrow-right me-1"></i>เข้าสู่ระบบ
+                        </span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center" style="max-width:480px">
+        <div class="mb-3"><i class="fa-solid fa-lock fa-3x text-muted"></i></div>
+        <h5 class="fw-bold mb-2">ยังไม่มีสิทธิ์เข้าถึงระบบใด</h5>
+        <p class="text-muted mb-0 small">กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์เข้าถึงระบบที่ต้องการ</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.system-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 .75rem 2rem rgba(0,0,0,.12) !important;
+}
+</style>
+{% endblock %}

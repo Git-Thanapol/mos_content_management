@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MOS CMS{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Prompt', sans-serif; background: #f8fafc; }
+        .navbar-brand .badge { font-size: 0.65rem; }
+        .status-badge { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 0.4rem; }
+        .stat-card { border-radius: 1rem; border: 2px solid transparent; transition: transform .15s, box-shadow .15s; cursor: pointer; }
+        .stat-card:hover { transform: scale(1.02); }
+        .stat-card.active { box-shadow: 0 0 0 4px rgba(255,255,255,.4) !important; border-color: rgba(255,255,255,.6) !important; transform: scale(1.02); }
+        .table th { font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+        .table td { vertical-align: middle; }
+        #toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; min-width: 280px; }
+        .modal-overlay { background: rgba(0,0,0,.55); backdrop-filter: blur(3px); }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Top navbar (system-agnostic) ───────────────────────────────────────── -->
+<nav class="navbar navbar-dark bg-dark sticky-top shadow-sm px-3">
+    <div class="d-flex align-items-center gap-3 w-100">
+        <!-- Brand → Hub -->
+        <a class="navbar-brand d-flex align-items-center gap-2 me-auto" href="{% url 'hub' %}">
+            <span class="p-2 rounded-3" style="background:#334155">
+                <i class="fa-solid fa-cube text-white"></i>
+            </span>
+            <div>
+                <div class="fw-bold text-white lh-1" style="font-size:.95rem">MOS CMS</div>
+                <small class="text-secondary" style="font-size:.65rem">ระบบจัดการ Content</small>
+            </div>
+        </a>
+
+        <!-- System switcher: shows only accessible systems -->
+        {% if request.user.is_authenticated %}
+        <ul class="navbar-nav flex-row gap-1">
+            {% for sys in available_systems %}
+            <li class="nav-item">
+                <a class="nav-link px-2 {% if active_system == sys.key %}active{% endif %}"
+                   href="{% url sys.url_name %}"
+                   title="{{ sys.name }}">
+                    <i class="fa-solid {{ sys.icon }} me-1"></i>
+                    <span class="d-none d-md-inline" style="font-size:.82rem">{{ sys.name_th }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <!-- User role badge + logout -->
+        {% if request.user.is_authenticated %}
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary small d-none d-sm-inline">
+                <i class="fa-solid fa-circle me-1" style="font-size:.5rem"></i>
+                {{ request.user.username }}
+            </span>
+            <form method="post" action="{% url 'logout' %}" style="margin:0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-secondary" title="ออกจากระบบ">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</nav>
+
+<!-- ── Per-system sub-navigation (filled by each system's _base.html) ──────── -->
+{% block subnav %}{% endblock %}
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<main class="container-fluid px-3 px-md-4 py-4" style="max-width:1700px">
+    {% block content %}{% endblock %}
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"></script>
+<script>
+function showToast(msg, type='success') {
+    const id = 'toast_' + Date.now();
+    const colors = {success:'bg-success',error:'bg-danger',info:'bg-primary'};
+    const icons = {success:'fa-check',error:'fa-xmark',info:'fa-info'};
+    const html = `<div id="${id}" class="toast align-items-center text-white ${colors[type]||'bg-secondary'} border-0 mb-2 show" role="alert">
+        <div class="d-flex">
+            <div class="toast-body fw-bold"><i class="fa-solid ${icons[type]||'fa-bell'} me-2"></i>${msg}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>`;
+    document.getElementById('toast-container').insertAdjacentHTML('beforeend', html);
+    const el = document.getElementById(id);
+    setTimeout(() => { el && el.remove(); }, 3500);
+}
+
+function closeAllModals() {
+    // Hide any open Bootstrap modal instances
+    document.querySelectorAll('.modal.show').forEach(modalEl => {
+        const m = bootstrap.Modal.getInstance(modalEl);
+        if (m) m.hide();
+    });
+    // Force-clean leftover backdrop and body state (Bootstrap sometimes misses this on HTMX swaps)
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 150);
+}
+
+// Handle HTMX swaps into #modal-container
+document.body.addEventListener('htmx:afterSwap', function(e) {
+    // Toast triggers (success/info from form saves)
+    const toasts = e.target.querySelectorAll('.toast-trigger');
+    if (toasts.length > 0) {
+        closeAllModals();
+        toasts.forEach(el => {
+            showToast(el.dataset.message || 'สำเร็จ', el.dataset.type || 'success');
+            el.remove();
+        });
+        return;
+    }
+
+    // Open a Bootstrap modal when fresh modal HTML is swapped in
+    if (e.target.id === 'modal-container') {
+        const modalEl = e.target.querySelector('.modal');
+        if (modalEl) new bootstrap.Modal(modalEl).show();
+    }
+});
+
+document.body.addEventListener('htmx:responseError', function() {
+    showToast('เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

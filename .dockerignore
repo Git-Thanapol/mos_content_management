@@ -1,0 +1,11 @@
+.env
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+uploads/
+staticfiles/
+*.sqlite3
+.DS_Store
