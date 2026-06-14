@@ -94,16 +94,16 @@
 
 <script>
 (function () {
-    const searchEl = document.getElementById('jst-search-input');
-    const resultsEl = document.getElementById('jst-results');
+    var searchEl = document.getElementById('jst-search-input');
+    var resultsEl = document.getElementById('jst-results');
     if (!searchEl || !resultsEl) return;
 
-    const searchUrl = "{% url 'clearance:jst_search' %}";
-    let timer;
+    var searchUrl = "{% url 'clearance:jst_search' %}";
+    var timer;
 
     searchEl.addEventListener('input', function () {
         clearTimeout(timer);
-        const q = this.value.trim();
+        var q = this.value.trim();
         if (!q) {
             resultsEl.innerHTML = '';
             resultsEl.style.display = 'none';
@@ -120,22 +120,22 @@
     });
 })();
 
-const jstFieldsUrl = "{% url 'clearance:jst_fields' %}";
+window.jstFieldsUrl = "{% url 'clearance:jst_fields' %}";
 
-function selectJstProduct(code, name) {
-    const codeInput = document.getElementById('id_product_code');
-    const nameInput = document.getElementById('id_product_name');
-    const resultsEl = document.getElementById('jst-results');
-    const searchEl = document.getElementById('jst-search-input');
+window.selectJstProduct = function (code, name) {
+    var codeInput = document.getElementById('id_product_code');
+    var nameInput = document.getElementById('id_product_name');
+    var resultsEl = document.getElementById('jst-results');
+    var searchEl = document.getElementById('jst-search-input');
 
     if (codeInput) codeInput.value = code;
     if (nameInput) nameInput.value = name;
     if (resultsEl) { resultsEl.innerHTML = ''; resultsEl.style.display = 'none'; }
     if (searchEl) searchEl.value = '';
 
-    htmx.ajax('GET', jstFieldsUrl + '?code=' + encodeURIComponent(code), {
+    htmx.ajax('GET', window.jstFieldsUrl + '?code=' + encodeURIComponent(code), {
         target: '#jst-info-box',
         swap: 'innerHTML'
     });
-}
+};
 </script>
