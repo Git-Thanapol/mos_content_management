@@ -27,15 +27,9 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">ค้นหาสินค้าจากระบบ JST</label>
                         <input type="text" id="jst-search-input"
-                               name="q"
                                class="form-control form-control-sm"
                                placeholder="พิมพ์รหัสหรือชื่อสินค้า..."
-                               autocomplete="off"
-                               hx-get="{% url 'clearance:jst_search' %}"
-                               hx-target="#jst-results"
-                               hx-swap="innerHTML"
-                               hx-trigger="input delay:350ms"
-                               hx-include="this">
+                               autocomplete="off">
                         <div id="jst-results" class="border rounded bg-white shadow-sm mt-1"
                              style="max-height:180px;overflow-y:auto;position:relative;z-index:9999;display:none">
                         </div>
@@ -99,21 +93,30 @@
 </div>
 
 <script>
-(function() {
-    // Show/hide results dropdown
+(function () {
+    const searchEl = document.getElementById('jst-search-input');
     const resultsEl = document.getElementById('jst-results');
-    if (!resultsEl) return;
+    if (!searchEl || !resultsEl) return;
 
-    // When HTMX swaps results in, show the dropdown
-    resultsEl.addEventListener('htmx:afterSwap', () => {
-        resultsEl.style.display = resultsEl.innerHTML.trim() ? 'block' : 'none';
-    });
+    const searchUrl = "{% url 'clearance:jst_search' %}";
+    let timer;
 
-    // Also listen on body since htmx fires on the target
-    document.body.addEventListener('htmx:afterSettle', function(e) {
-        if (e.target.id === 'jst-results') {
-            resultsEl.style.display = resultsEl.innerHTML.trim() ? 'block' : 'none';
+    searchEl.addEventListener('input', function () {
+        clearTimeout(timer);
+        const q = this.value.trim();
+        if (!q) {
+            resultsEl.innerHTML = '';
+            resultsEl.style.display = 'none';
+            return;
         }
+        timer = setTimeout(function () {
+            fetch(searchUrl + '?q=' + encodeURIComponent(q))
+                .then(function (r) { return r.text(); })
+                .then(function (html) {
+                    resultsEl.innerHTML = html;
+                    resultsEl.style.display = html.trim() ? 'block' : 'none';
+                });
+        }, 350);
     });
 })();
 
@@ -130,7 +133,6 @@ function selectJstProduct(code, name) {
     if (resultsEl) { resultsEl.innerHTML = ''; resultsEl.style.display = 'none'; }
     if (searchEl) searchEl.value = '';
 
-    // Load read-only JST info
     htmx.ajax('GET', jstFieldsUrl + '?code=' + encodeURIComponent(code), {
         target: '#jst-info-box',
         swap: 'innerHTML'
