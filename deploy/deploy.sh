@@ -5,7 +5,7 @@
 #   bash deploy/deploy.sh --first-run # first-time: also seeds data + creates superuser
 set -euo pipefail
 
-APP_DIR="/opt/mos-cms"
+APP_DIR="/srv/mos-cms"
 COMPOSE="docker compose -f docker-compose.prod.yml"
 FIRST_RUN=false
 

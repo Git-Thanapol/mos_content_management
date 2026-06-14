@@ -3,7 +3,7 @@
 # Usage: bash deploy/setup.sh
 set -euo pipefail
 
-APP_DIR="/opt/mos-cms"
+APP_DIR="/srv/mos-cms"
 
 echo "==> Installing Docker..."
 apt-get update -qq
