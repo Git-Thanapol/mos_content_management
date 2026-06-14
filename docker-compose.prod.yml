@@ -1,0 +1,40 @@
+name: mos-cms
+
+services:
+  mos-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: producttest
+      POSTGRES_USER: producttest
+      POSTGRES_PASSWORD: producttest
+    volumes:
+      - mos-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U producttest"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mos-web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./uploads:/app/uploads
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      mos-db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn config.wsgi:application
+             --bind 0.0.0.0:8000
+             --workers 3
+             --timeout 60
+             --access-logfile -
+             --error-logfile -"
+
+volumes:
+  mos-pgdata:

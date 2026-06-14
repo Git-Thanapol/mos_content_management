@@ -9,3 +9,5 @@ uploads/
 staticfiles/
 *.sqlite3
 .DS_Store
+deploy/
+*.html
