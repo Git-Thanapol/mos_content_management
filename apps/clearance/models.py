@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.db import models
 
 
@@ -20,6 +22,7 @@ class ClearanceProduct(models.Model):
         max_length=255, blank=True, verbose_name="ชื่อสินค้า (cached)"
     )
 
+    date_added = models.DateField(default=date.today, verbose_name="วันที่ลงข้อมูล")
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default=STATUS_WAIT, verbose_name="สถานะ"
     )

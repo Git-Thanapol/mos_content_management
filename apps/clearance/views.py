@@ -66,6 +66,7 @@ def clearance_table_partial(request):
             "jst_stock": d.get("stock", "-"),
             "jst_cost": d.get("cost", "-"),
             "jst_last_order_date": d.get("last_order_date"),
+            "jst_image": d.get("image", ""),
         })
 
     return render(request, "clearance/partials/clearance_rows.html", {"rows": rows})

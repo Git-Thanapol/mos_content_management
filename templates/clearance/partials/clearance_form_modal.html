@@ -44,28 +44,30 @@
                     </div>
 
                     <div class="row g-3">
-                        <!-- Product code -->
+                        <!-- Row 1: รหัสสินค้า | สถานะ -->
                         <div class="col-sm-6">
                             <label class="form-label fw-semibold small">รหัสสินค้า (JST) *</label>
                             {{ form.product_code }}
                             {{ form.product_name }}
                         </div>
-                        <!-- Status -->
                         <div class="col-sm-6">
                             <label class="form-label fw-semibold small">สถานะ</label>
                             {{ form.status }}
                         </div>
-                        <!-- Assignee -->
+                        <!-- Row 2: ผู้รับผิดชอบ | วันที่ลงข้อมูล -->
                         <div class="col-sm-6">
                             <label class="form-label fw-semibold small">ผู้รับผิดชอบ</label>
                             {{ form.assignee }}
                         </div>
-                        <!-- Process date -->
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">วันที่ลงข้อมูล</label>
+                            {{ form.date_added }}
+                        </div>
+                        <!-- Row 3: วันที่ดำเนินการ | วันที่เรียบร้อย -->
                         <div class="col-sm-6">
                             <label class="form-label fw-semibold small">วันที่ดำเนินการ</label>
                             {{ form.process_date }}
                         </div>
-                        <!-- Done date -->
                         <div class="col-sm-6">
                             <label class="form-label fw-semibold small">วันที่เรียบร้อย</label>
                             {{ form.done_date }}

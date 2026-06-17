@@ -87,6 +87,9 @@ DATABASES = {
 
 DATABASE_ROUTERS = ["apps.clearance.routers.JstRouter"]
 
+# Base URL of the JST web server for serving product images (e.g. http://192.168.1.100:8080)
+JST_BASE_URL = config("JST_BASE_URL", default="")
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},

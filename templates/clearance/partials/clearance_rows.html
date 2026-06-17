@@ -8,10 +8,20 @@
         <span class="fw-bold font-monospace" style="font-size:.82rem">{{ p.product_code }}</span>
     </td>
     <td class="px-3 text-center">
+        {% if row.jst_image %}
+        <img src="{{ row.jst_image }}" class="rounded-2"
+             style="width:40px;height:40px;object-fit:cover;border:1px solid #e2e8f0"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="d-none d-inline-flex align-items-center justify-content-center rounded-2 border"
+             style="width:40px;height:40px;background:#f8fafc;color:#94a3b8">
+            <i class="fa-regular fa-image"></i>
+        </div>
+        {% else %}
         <div class="d-inline-flex align-items-center justify-content-center rounded-2 border"
              style="width:40px;height:40px;background:#f8fafc;color:#94a3b8">
             <i class="fa-regular fa-image"></i>
         </div>
+        {% endif %}
     </td>
     <td class="px-3" style="max-width:200px">
         <span class="fw-bold text-dark" style="font-size:.85rem">{{ row.jst_name }}</span>

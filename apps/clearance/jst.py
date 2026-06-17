@@ -9,9 +9,20 @@ from __future__ import annotations
 import logging
 from typing import Sequence
 
+from django.conf import settings
+
 logger = logging.getLogger(__name__)
 
-_FALLBACK = {"name": "-", "stock": "-", "cost": "-", "last_order_date": None}
+_FALLBACK = {"name": "-", "stock": "-", "cost": "-", "last_order_date": None, "image": ""}
+
+
+def _build_image_url(path: str | None) -> str:
+    if not path:
+        return ""
+    base = getattr(settings, "JST_BASE_URL", "").rstrip("/")
+    if not base:
+        return ""
+    return f"{base}{path}"
 
 
 def _fallback_map(codes: Sequence[str]) -> dict:
@@ -33,9 +44,12 @@ def search_products(q: str, limit: int = 20) -> list[dict]:
         qs = (
             JstMasterItem.objects.using("jst")
             .filter(Q(product_code__icontains=q) | Q(name__icontains=q))
-            .values("product_code", "name")[:limit]
+            .values("product_code", "name", "image")[:limit]
         )
-        return list(qs)
+        rows = list(qs)
+        for r in rows:
+            r["image"] = _build_image_url(r.get("image"))
+        return rows
     except Exception as exc:
         logger.warning("JST search failed: %s", exc)
         return []
@@ -70,13 +84,14 @@ def enrich(codes: Sequence[str]) -> dict[str, dict]:
             JstMasterItem.objects.using("jst")
             .filter(product_code__in=codes)
             .annotate(latest_stock=Subquery(latest_qty_subq))
-            .values("product_code", "name", "latest_stock")
+            .values("product_code", "name", "latest_stock", "image")
         )
         for row in items:
             code = row["product_code"]
             result[code]["name"] = row["name"] or "-"
             stock = row["latest_stock"]
             result[code]["stock"] = stock if stock is not None else "-"
+            result[code]["image"] = _build_image_url(row.get("image"))
 
         # ── Query 2: latest PO item per code (order_date + landed cost) ──────
         # Fetch all PO items for these SKUs, ordered by header date desc.

@@ -10,6 +10,7 @@ class ClearanceProductForm(forms.ModelForm):
             "product_name",
             "status",
             "assignee",
+            "date_added",
             "process_date",
             "done_date",
         ]
@@ -29,6 +30,9 @@ class ClearanceProductForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "เช่น เดือน, ฟลุ๊ค"}
             ),
             # format="%Y-%m-%d" required when LANGUAGE_CODE='th' to avoid Thai locale in date inputs
+            "date_added": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}, format="%Y-%m-%d"
+            ),
             "process_date": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}, format="%Y-%m-%d"
             ),
