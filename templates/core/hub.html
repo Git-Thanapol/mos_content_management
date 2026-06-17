@@ -7,8 +7,9 @@
     <div class="text-center mb-5">
         <img src="{% static 'logo.png' %}" alt="MOS CMS"
              style="width:72px;height:72px;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.15)" class="mb-3">
-        <h2 class="fw-bold mb-1">MOS CMS</h2>
-        <p class="text-muted">สวัสดี <strong>{{ request.user.username }}</strong> — เลือกระบบที่ต้องการใช้งาน</p>
+        <h2 class="fw-bold mb-0" style="color:#4f46e5">ระบบจัดการ Content</h2>
+        <div class="text-muted mb-1" style="font-size:.82rem;letter-spacing:.04em">MOS CMS</div>
+        <p class="text-muted mb-0" style="font-size:.88rem">สวัสดี <strong>{{ request.user.username }}</strong> — เลือกระบบที่ต้องการใช้งาน</p>
     </div>
 
     {% if systems %}
