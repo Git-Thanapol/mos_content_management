@@ -1,8 +1,11 @@
+from datetime import date, timedelta
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST, require_http_methods
 from django.http import HttpResponse
 from django.db import transaction
 from django.db.models import Q
+from django.utils.dateparse import parse_date
 
 from apps.core.access import system_required
 from apps.producttest.models import Employee
@@ -12,17 +15,22 @@ from .forms import GraphicJobForm
 
 
 def _stat_cards(qs_all):
+    today = date.today()
     wait = qs_all.filter(status=GraphicJob.STATUS_WAIT).count()
     prog = qs_all.filter(status=GraphicJob.STATUS_IN_PROGRESS).count()
     done = qs_all.filter(status=GraphicJob.STATUS_DONE).count()
     total = qs_all.count()
     backlog = wait + prog
+    late = qs_all.filter(deadline__lt=today).exclude(status=GraphicJob.STATUS_DONE).count()
+    # tuples: (label, key, color_class, icon, val, extra_style)
     return [
-        ("คิวงานทั้งหมด",   "ALL",           "bg-secondary",  "fa-layer-group",         total),
-        ("รอดำเนินการ",    GraphicJob.STATUS_WAIT,         "bg-secondary",  "fa-clock",               wait),
-        ("กำลังดำเนินการ", GraphicJob.STATUS_IN_PROGRESS,  "bg-warning",    "fa-spinner",             prog),
-        ("งานที่ค้าง",     "งานที่ค้าง",    "bg-danger",     "fa-triangle-exclamation", backlog),
-        ("เรียบร้อย",      GraphicJob.STATUS_DONE,         "bg-success",    "fa-circle-check",        done),
+        ("คิวงานทั้งหมด",   "ALL",            "bg-primary", "fa-layer-group",          total,   "background:#1890FF"),
+        ("รอดำเนินการ",    GraphicJob.STATUS_WAIT,         "bg-secondary", "fa-clock",                wait,    ""),
+        ("กำลังดำเนินการ", GraphicJob.STATUS_IN_PROGRESS,  "bg-warning",   "fa-spinner",              prog,    ""),
+        ("งานที่ค้าง",     "งานที่ค้าง",     "bg-danger",  "fa-triangle-exclamation",  backlog, ""),
+        ("เรียบร้อย",      GraphicJob.STATUS_DONE,         "bg-success",   "fa-circle-check",         done,    ""),
+        ("งานส่งล่าช้า",   "งานส่งล่าช้า",   "bg-danger",  "fa-fire",                  late,
+         "background:linear-gradient(135deg,#dc2626,#ea580c);box-shadow:0 0 0 3px rgba(220,38,38,.35),0 4px 14px rgba(220,38,38,.25)"),
     ]
 
 
@@ -30,11 +38,15 @@ def _apply_filters(qs, request):
     status = request.GET.get("status", "ALL")
     product_type = request.GET.get("product_type", "ALL")
     assignee_name = request.GET.get("assignee", "ALL")
-    month = request.GET.get("month", "")
+    urgency = request.GET.get("urgency", "ALL")
+    date_from = request.GET.get("date_from", "")
+    date_to = request.GET.get("date_to", "")
     search = request.GET.get("q", "").strip()
 
     if status == "งานที่ค้าง":
         qs = qs.exclude(status=GraphicJob.STATUS_DONE)
+    elif status == "งานส่งล่าช้า":
+        qs = qs.filter(deadline__lt=date.today()).exclude(status=GraphicJob.STATUS_DONE)
     elif status != "ALL":
         qs = qs.filter(status=status)
 
@@ -44,12 +56,18 @@ def _apply_filters(qs, request):
     if assignee_name != "ALL":
         qs = qs.filter(assignee__name=assignee_name)
 
-    if month:
-        try:
-            year, mo = month.split("-")
-            qs = qs.filter(order_date__year=int(year), order_date__month=int(mo))
-        except ValueError:
-            pass
+    if urgency != "ALL":
+        qs = qs.filter(urgency=urgency)
+
+    if date_from:
+        d = parse_date(date_from)
+        if d:
+            qs = qs.filter(order_date__gte=d)
+
+    if date_to:
+        d = parse_date(date_to)
+        if d:
+            qs = qs.filter(order_date__lte=d)
 
     if search:
         qs = qs.filter(Q(sku__icontains=search) | Q(name__icontains=search))
@@ -69,16 +87,23 @@ def queue_list(request):
         "current_status": request.GET.get("status", "ALL"),
         "current_product_type": request.GET.get("product_type", "ALL"),
         "current_assignee": request.GET.get("assignee", "ALL"),
-        "current_month": request.GET.get("month", ""),
+        "current_urgency": request.GET.get("urgency", "ALL"),
+        "current_date_from": request.GET.get("date_from", ""),
+        "current_date_to": request.GET.get("date_to", ""),
         "current_q": request.GET.get("q", ""),
     })
 
 
 @system_required("graphicqueue")
 def queue_table_partial(request):
+    today = date.today()
     qs = GraphicJob.objects.select_related("assignee").prefetch_related("media_types", "ref_images")
     qs = _apply_filters(qs, request)
-    return render(request, "graphicqueue/partials/queue_rows.html", {"jobs": list(qs)})
+    return render(request, "graphicqueue/partials/queue_rows.html", {
+        "jobs": list(qs),
+        "today": today,
+        "today_plus_3": today + timedelta(days=3),
+    })
 
 
 # ── Add / Edit / Delete ──────────────────────────────────────────────────────

@@ -1,6 +1,21 @@
 {% extends "graphicqueue/_base.html" %}
 {% block title %}Graphic Queue Center{% endblock %}
 
+{% block extra_head %}
+<style>
+@keyframes blink-fire {
+    0%, 100% { opacity: .25; transform: scale(1); }
+    50%       { opacity: 1;   transform: scale(1.2); }
+}
+.blink-icon { animation: blink-fire 1.1s ease-in-out infinite !important; opacity: 1 !important; }
+
+.table-responsive::-webkit-scrollbar { height: 5px; }
+.table-responsive::-webkit-scrollbar-track { background: #f1f5f9; }
+.table-responsive::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.table-responsive::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Header -->
 <div class="rounded-4 p-4 mb-3 text-white" style="background:#1e1b4b">
@@ -10,16 +25,14 @@
 
 <!-- Stat cards -->
 <div class="row g-3 mb-3">
-    {% for label,key,color,icon,val in stat_cards %}
+    {% for label,key,color,icon,val,extra_style in stat_cards %}
     <div class="col-6 col-lg">
         <div class="stat-card p-3 text-white {{ color }} {% if current_status == key %}active{% endif %}"
-             hx-get="{% url 'graphicqueue:queue_table_partial' %}?status={{ key }}&product_type={{ current_product_type }}&assignee={{ current_assignee }}&month={{ current_month }}&q={{ current_q }}"
-             hx-target="#queue-table"
-             hx-swap="innerHTML"
+             {% if extra_style %}style="{{ extra_style }}"{% endif %}
              onclick="setActiveCard(this, '{{ key }}')">
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between align-items-start">
                 <small class="text-uppercase fw-bold opacity-75" style="font-size:.6rem">{{ label }}</small>
-                <i class="fa-solid {{ icon }} opacity-25"></i>
+                <i class="fa-solid {{ icon }} {% if key == 'งานส่งล่าช้า' %}blink-icon{% else %}opacity-25{% endif %}"></i>
             </div>
             <div class="display-6 fw-bold mt-1">{{ val }}</div>
         </div>
@@ -33,7 +46,37 @@
         <form id="queue-filter-form" class="row g-2 align-items-end">
             <input type="hidden" name="status" id="hidden-status" value="{{ current_status }}">
 
-            <div class="col-6 col-md-2">
+            <!-- ค้นหา -->
+            <div class="col-12 col-sm-6 col-lg">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fa-solid fa-magnifying-glass text-muted" style="font-size:.75rem"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ current_q }}"
+                           placeholder="ค้นหาชื่อสินค้า หรือ SKU..."
+                           class="form-control form-control-sm border-start-0 ps-0"
+                           hx-get="{% url 'graphicqueue:queue_table_partial' %}"
+                           hx-target="#queue-table"
+                           hx-include="#queue-filter-form"
+                           hx-trigger="keyup changed delay:400ms">
+                </div>
+            </div>
+
+            <!-- ประเภทงาน -->
+            <div class="col-6 col-sm-3 col-lg-auto">
+                <select name="urgency" class="form-select form-select-sm"
+                        hx-get="{% url 'graphicqueue:queue_table_partial' %}"
+                        hx-target="#queue-table"
+                        hx-include="#queue-filter-form"
+                        hx-trigger="change">
+                    <option value="ALL" {% if current_urgency == "ALL" %}selected{% endif %}>ประเภทงาน (ทั้งหมด)</option>
+                    <option value="ด่วน"  {% if current_urgency == "ด่วน" %}selected{% endif %}>⚡ ด่วน</option>
+                    <option value="ทั่วไป" {% if current_urgency == "ทั่วไป" %}selected{% endif %}>ทั่วไป</option>
+                </select>
+            </div>
+
+            <!-- ประเภทสินค้า -->
+            <div class="col-6 col-sm-3 col-lg-auto">
                 <select name="product_type" class="form-select form-select-sm"
                         hx-get="{% url 'graphicqueue:queue_table_partial' %}"
                         hx-target="#queue-table"
@@ -45,7 +88,8 @@
                 </select>
             </div>
 
-            <div class="col-6 col-md-2">
+            <!-- ผู้รับผิดชอบ -->
+            <div class="col-6 col-sm-3 col-lg-auto">
                 <select name="assignee" class="form-select form-select-sm"
                         hx-get="{% url 'graphicqueue:queue_table_partial' %}"
                         hx-target="#queue-table"
@@ -58,27 +102,36 @@
                 </select>
             </div>
 
-            <div class="col-6 col-md-2">
-                <input type="month" name="month" value="{{ current_month }}"
-                       class="form-control form-control-sm"
-                       hx-get="{% url 'graphicqueue:queue_table_partial' %}"
-                       hx-target="#queue-table"
-                       hx-include="#queue-filter-form"
-                       hx-trigger="change">
+            <!-- วันที่เริ่มสั่งงาน -->
+            <div class="col-6 col-sm-3 col-lg-auto">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white" style="font-size:.72rem;color:#64748b">เริ่ม:</span>
+                    <input type="date" name="date_from" value="{{ current_date_from }}"
+                           class="form-control form-control-sm"
+                           hx-get="{% url 'graphicqueue:queue_table_partial' %}"
+                           hx-target="#queue-table"
+                           hx-include="#queue-filter-form"
+                           hx-trigger="change">
+                </div>
             </div>
 
-            <div class="col-6 col-md-3">
-                <input type="text" name="q" value="{{ current_q }}" placeholder="ค้นหาชื่อสินค้า หรือ SKU..."
-                       class="form-control form-control-sm"
-                       hx-get="{% url 'graphicqueue:queue_table_partial' %}"
-                       hx-target="#queue-table"
-                       hx-include="#queue-filter-form"
-                       hx-trigger="keyup changed delay:400ms">
+            <!-- วันที่สิ้นสุดสั่งงาน -->
+            <div class="col-6 col-sm-3 col-lg-auto">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white" style="font-size:.72rem;color:#64748b">สิ้นสุด:</span>
+                    <input type="date" name="date_to" value="{{ current_date_to }}"
+                           class="form-control form-control-sm"
+                           hx-get="{% url 'graphicqueue:queue_table_partial' %}"
+                           hx-target="#queue-table"
+                           hx-include="#queue-filter-form"
+                           hx-trigger="change">
+                </div>
             </div>
 
-            <div class="col-12 col-md-auto ms-md-auto">
+            <!-- ปุ่มเพิ่มคิวงาน -->
+            <div class="col-12 col-sm-auto ms-sm-auto">
                 <button type="button" class="btn btn-sm fw-bold w-100 text-white"
-                        style="background:#4f46e5"
+                        style="background:#4f46e5;white-space:nowrap"
                         hx-get="{% url 'graphicqueue:queue_add' %}"
                         hx-target="#modal-container"
                         hx-swap="innerHTML">
@@ -95,7 +148,7 @@
         <table class="table table-hover mb-0">
             <thead style="background:#f1f5f9">
                 <tr style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#475569;border-bottom:1px solid #e2e8f0">
-                    <th class="py-3 px-3 text-center" style="white-space:nowrap">จัดการ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">เลือก</th>
                     <th class="py-3 px-3" style="white-space:nowrap">SKU</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">รูปสินค้า</th>
                     <th class="py-3 px-3" style="white-space:nowrap">ชื่อสินค้า</th>
@@ -110,13 +163,15 @@
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">ผู้รับผิดชอบ</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">ข้อมูลสื่ออ้างอิง</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">URL ลิ้งค์ส่งงาน</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">จัดการ</th>
                 </tr>
             </thead>
             <tbody id="queue-table"
-                   hx-get="{% url 'graphicqueue:queue_table_partial' %}?status={{ current_status }}&product_type={{ current_product_type }}&assignee={{ current_assignee }}&month={{ current_month }}&q={{ current_q }}"
+                   hx-get="{% url 'graphicqueue:queue_table_partial' %}"
+                   hx-include="#queue-filter-form"
                    hx-trigger="load, refresh"
                    hx-swap="innerHTML">
-                <tr><td colspan="15" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
+                <tr><td colspan="16" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
             </tbody>
         </table>
     </div>
@@ -131,6 +186,7 @@ function setActiveCard(el, status) {
     document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
     document.getElementById('hidden-status').value = status;
+    htmx.trigger('#queue-table', 'refresh');
 }
 </script>
 {% endblock %}
