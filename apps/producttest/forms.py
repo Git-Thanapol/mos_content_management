@@ -74,6 +74,14 @@ class CommissionForm(forms.ModelForm):
             "note": forms.TextInput(attrs={"class": "form-control", "placeholder": "หมายเหตุ"}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["status"].choices = [
+            (Commission.STATUS_WAIT_FILL, "รอกรอกค่าคอม"),
+            (Commission.STATUS_WAIT_PAY, "รอจ่ายค่าคอม"),
+            (Commission.STATUS_PAID, "จ่ายค่าคอมเรียบร้อย"),
+        ]
+
 
 class DateRangeForm(forms.Form):
     DATE_FIELD_CHOICES = [

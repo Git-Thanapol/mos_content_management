@@ -305,16 +305,18 @@ def supervisor_view(request):
         "wait_fill": Commission.objects.filter(status=Commission.STATUS_WAIT_FILL).count(),
         "wait_pay": Commission.objects.filter(status=Commission.STATUS_WAIT_PAY).count(),
         "paid": Commission.objects.filter(status=Commission.STATUS_PAID).count(),
+        "failed": Commission.objects.filter(status=Commission.STATUS_FAILED).count(),
         "total_paid": total_paid,
     }
     employees = Employee.objects.filter(is_active=True)
     date_form = DateRangeForm(request.GET or None)
 
     sup_stat_cards = [
-        ("ทั้งหมด",              "ALL",                   "bg-primary",  "fa-layer-group",       stats["all"]),
-        ("รอกรอกค่าคอม",        "รอกรอกค่าคอม",          "bg-secondary",    "fa-file-pen",          stats["wait_fill"]),
-        ("รอจ่ายค่าคอม",        "รอจ่ายค่าคอม",          "bg-info",    "fa-hourglass-half",    stats["wait_pay"]),
-        ("จ่ายค่าคอมเรียบร้อย", "จ่ายค่าคอมเรียบร้อย",  "bg-success",    "fa-money-bill-wave",   stats["paid"]),
+        ("ทั้งหมด",              "ALL",                   "bg-primary",   "fa-layer-group",    stats["all"]),
+        ("รอกรอกค่าคอม",        "รอกรอกค่าคอม",          "bg-secondary", "fa-file-pen",       stats["wait_fill"]),
+        ("รอจ่ายค่าคอม",        "รอจ่ายค่าคอม",          "bg-info",      "fa-hourglass-half", stats["wait_pay"]),
+        ("จ่ายค่าคอมเรียบร้อย", "จ่ายค่าคอมเรียบร้อย",  "bg-success",   "fa-money-bill-wave",stats["paid"]),
+        ("ไม่ผ่าน",              "ไม่ผ่าน",               "bg-danger",    "fa-ban",            stats["failed"]),
     ]
     return render(request, "producttest/supervisor.html", {
         "stats": stats,
@@ -324,6 +326,7 @@ def supervisor_view(request):
         "current_status": request.GET.get("status", "ALL"),
         "current_employee": request.GET.get("employee", "ALL"),
         "current_q": request.GET.get("q", ""),
+        "current_date_field": request.GET.get("date_field", "upload_date"),
     })
 
 
@@ -338,6 +341,9 @@ def supervisor_table_partial(request):
     comm_status = request.GET.get("status", "ALL")
     employee = request.GET.get("employee", "ALL")
     search = request.GET.get("q", "").strip()
+    date_field = request.GET.get("date_field", "upload_date")
+    if date_field not in {"upload_date", "start_date"}:
+        date_field = "upload_date"
     date_from = request.GET.get("date_from", "")
     date_to = request.GET.get("date_to", "")
 
@@ -350,11 +356,11 @@ def supervisor_table_partial(request):
     if date_from:
         d = parse_date(date_from)
         if d:
-            qs = qs.filter(upload_date__gte=d)
+            qs = qs.filter(**{f"{date_field}__gte": d})
     if date_to:
         d = parse_date(date_to)
         if d:
-            qs = qs.filter(upload_date__lte=d)
+            qs = qs.filter(**{f"{date_field}__lte": d})
 
     products = list(qs)
     if comm_status != "ALL":
@@ -392,6 +398,17 @@ def supervisor_manage(request, pk):
                 if new_status in dict(TestProduct.MANUAL_STATUS_CHOICES):
                     product.manual_status = new_status
                     product.save(update_fields=["manual_status"])
+
+                # Auto-adjust commission status based on test result
+                fail_statuses = {TestProduct.STATUS_FAIL, TestProduct.STATUS_CANCEL}
+                if product.manual_status in fail_statuses:
+                    comm.status = Commission.STATUS_FAILED
+                    comm.total = 0
+                    comm.per_person = 0
+                    comm.save()
+                elif comm.status == Commission.STATUS_FAILED:
+                    comm.status = Commission.STATUS_WAIT_FILL
+                    comm.save()
 
                 # Handle slip uploads
                 if comm.status == Commission.STATUS_PAID:

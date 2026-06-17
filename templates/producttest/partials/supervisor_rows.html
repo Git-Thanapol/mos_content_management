@@ -19,10 +19,19 @@
         </div>
         {% endif %}
     </td>
-    <td class="py-2 px-3" style="font-weight:700;color:#1e293b;font-size:.8rem">{{ p.name }}</td>
-    <td class="py-2 px-3" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        <div style="font-size:.68rem;font-weight:700;color:#334155">{{ p.info|default:"-" }}</div>
-        <div style="font-size:.62rem;color:#94a3b8;margin-top:1px">{{ p.detail|default:"" }}</div>
+    <td class="py-2 px-3" style="font-weight:700;color:#1e293b;font-size:.8rem;white-space:nowrap">{{ p.name }}</td>
+    <td class="py-2 px-3 text-center">
+        {% if p.info or p.detail %}
+        <button class="px-3 py-1 rounded-2 border-0"
+                style="font-size:.62rem;font-weight:700;background:#f0fdf4;color:#059669;border:1px solid #bbf7d0 !important;transition:all .15s"
+                onmouseover="this.style.background='#059669';this.style.color='white'"
+                onmouseout="this.style.background='#f0fdf4';this.style.color='#059669'"
+                hx-get="{% url 'product_info' p.pk %}"
+                hx-target="#modal-container"
+                hx-swap="innerHTML">
+            ดูข้อมูล
+        </button>
+        {% else %}<span style="font-size:.65rem;color:#cbd5e1">-</span>{% endif %}
     </td>
     <td class="py-2 px-3 text-center">
         <button class="position-relative rounded-3 border-0 p-2"
@@ -102,6 +111,8 @@
             <span class="px-2 py-1 rounded-2" style="font-size:.6rem;font-weight:700;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">จ่ายเรียบร้อย</span>
         {% elif comm.status == "รอจ่ายค่าคอม" %}
             <span class="px-2 py-1 rounded-2" style="font-size:.6rem;font-weight:700;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe">รอจ่าย</span>
+        {% elif comm.status == "ไม่ผ่าน" %}
+            <span class="px-2 py-1 rounded-2" style="font-size:.6rem;font-weight:700;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5">ไม่ผ่าน</span>
         {% else %}
             <span class="px-2 py-1 rounded-2" style="font-size:.6rem;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fde68a">รอกรอกข้อมูล</span>
         {% endif %}
@@ -110,6 +121,12 @@
         {{ comm.note|default:"-" }}
     </td>
     <td class="py-2 px-3 text-center">
+        {% if comm.status == "ไม่ผ่าน" %}
+        <button class="px-2 py-1 rounded-2 border-0" disabled
+                style="font-size:.62rem;font-weight:700;background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0 !important;cursor:not-allowed;opacity:.55">
+            <i class="fa-solid fa-gear me-1"></i>จัดการ
+        </button>
+        {% else %}
         <button class="px-2 py-1 rounded-2 border-0"
                 style="font-size:.62rem;font-weight:700;background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe !important;transition:all .15s"
                 onmouseover="this.style.background='#4f46e5';this.style.color='white'"
@@ -118,6 +135,7 @@
                 hx-target="#modal-container" hx-swap="innerHTML">
             <i class="fa-solid fa-gear me-1"></i>จัดการ
         </button>
+        {% endif %}
     </td>
     <!-- หลักฐานโอน column — separate from การจัดการ -->
     <td class="py-2 px-3 text-center">

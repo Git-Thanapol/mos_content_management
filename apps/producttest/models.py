@@ -161,11 +161,13 @@ class Commission(models.Model):
     STATUS_WAIT_FILL = "รอกรอกค่าคอม"
     STATUS_WAIT_PAY = "รอจ่ายค่าคอม"
     STATUS_PAID = "จ่ายค่าคอมเรียบร้อย"
+    STATUS_FAILED = "ไม่ผ่าน"
 
     STATUS_CHOICES = [
         (STATUS_WAIT_FILL, "รอกรอกค่าคอม"),
         (STATUS_WAIT_PAY, "รอจ่ายค่าคอม"),
         (STATUS_PAID, "จ่ายค่าคอมเรียบร้อย"),
+        (STATUS_FAILED, "ไม่ผ่าน"),
     ]
 
     product = models.OneToOneField(
