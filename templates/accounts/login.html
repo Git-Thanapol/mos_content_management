@@ -1,9 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าสู่ระบบ — Product Test Center</title>
+    <title>เข้าสู่ระบบ — MOS CMS</title>
+    <link rel="icon" type="image/png" href="{% static 'logo.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
@@ -16,11 +18,10 @@
 <div class="card shadow-lg border-0 rounded-4" style="max-width:400px;width:100%;margin:1rem">
     <div class="card-body p-5">
         <div class="text-center mb-4">
-            <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-3" style="width:56px;height:56px;background:#4f46e5">
-                <i class="fa-solid fa-flask-vial text-white fa-lg"></i>
-            </div>
-            <h4 class="fw-bold mb-0">Product Test Center</h4>
-            <small class="text-muted">ระบบวิเคราะห์สินค้าทดสอบ</small>
+            <img src="{% static 'logo.png' %}" alt="MOS CMS"
+                 style="width:64px;height:64px;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.15)" class="mb-3">
+            <h4 class="fw-bold mb-0">MOS CMS</h4>
+            <small class="text-muted">ระบบจัดการ Content</small>
         </div>
 
         {% if form.errors %}

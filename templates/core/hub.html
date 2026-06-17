@@ -1,13 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}MOS CMS — เลือกระบบ{% endblock %}
 
 {% block content %}
 <div class="d-flex flex-column align-items-center justify-content-center" style="min-height:60vh">
     <div class="text-center mb-5">
-        <div class="d-inline-flex align-items-center justify-content-center rounded-4 mb-3 shadow-sm"
-             style="width:72px;height:72px;background:#334155">
-            <i class="fa-solid fa-cube text-white fa-2x"></i>
-        </div>
+        <img src="{% static 'logo.png' %}" alt="MOS CMS"
+             style="width:72px;height:72px;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.15)" class="mb-3">
         <h2 class="fw-bold mb-1">MOS CMS</h2>
         <p class="text-muted">สวัสดี <strong>{{ request.user.username }}</strong> — เลือกระบบที่ต้องการใช้งาน</p>
     </div>
