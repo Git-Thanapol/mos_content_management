@@ -5,15 +5,11 @@
             <span class="text-muted">ชื่อสินค้า:</span>
             <strong class="ms-1">{{ info.name }}</strong>
         </div>
-        <div class="col-6 col-sm-4">
+        <div class="col-6">
             <span class="text-muted">สต็อกคงเหลือ:</span>
             <strong class="ms-1 {% if info.stock != '-' %}text-dark{% else %}text-muted{% endif %}">{{ info.stock }}</strong>
         </div>
-        <div class="col-6 col-sm-4">
-            <span class="text-muted">ต้นทุน (Landed):</span>
-            <strong class="ms-1">{% if info.cost != '-' %}{{ info.cost|floatformat:2 }} ฿{% else %}-{% endif %}</strong>
-        </div>
-        <div class="col-6 col-sm-4">
+        <div class="col-6">
             <span class="text-muted">สั่งซื้อล่าสุด:</span>
             <strong class="ms-1">{% if info.last_order_date %}{{ info.last_order_date|date:"d/m/Y" }}{% else %}-{% endif %}</strong>
         </div>

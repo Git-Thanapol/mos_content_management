@@ -13,6 +13,7 @@ class ClearanceProductForm(forms.ModelForm):
             "date_added",
             "process_date",
             "done_date",
+            "unit_cost",
         ]
         widgets = {
             "product_code": forms.TextInput(
@@ -38,5 +39,8 @@ class ClearanceProductForm(forms.ModelForm):
             ),
             "done_date": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}, format="%Y-%m-%d"
+            ),
+            "unit_cost": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "0.00", "step": "0.01", "min": "0"}
             ),
         }

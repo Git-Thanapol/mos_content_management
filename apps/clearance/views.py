@@ -64,7 +64,6 @@ def clearance_table_partial(request):
             "product": p,
             "jst_name": d.get("name", p.product_name or "-"),
             "jst_stock": d.get("stock", "-"),
-            "jst_cost": d.get("cost", "-"),
             "jst_last_order_date": d.get("last_order_date"),
             "jst_image": d.get("image", ""),
         })

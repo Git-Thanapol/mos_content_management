@@ -72,6 +72,11 @@
                             <label class="form-label fw-semibold small">วันที่เรียบร้อย</label>
                             {{ form.done_date }}
                         </div>
+                        <!-- Row 4: ต้นทุนสินค้า -->
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">ต้นทุนสินค้า (บาท)</label>
+                            {{ form.unit_cost }}
+                        </div>
                     </div>
 
                     {% if form.errors %}

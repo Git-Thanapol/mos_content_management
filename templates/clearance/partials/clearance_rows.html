@@ -1,3 +1,4 @@
+{% load humanize %}
 {% for row in rows %}
 {% with p=row.product %}
 <tr class="align-middle border-bottom">
@@ -42,9 +43,14 @@
             {% endwith %}
         </button>
     </td>
-    <td class="px-3 text-center fw-bold">{{ row.jst_stock }}</td>
-    <td class="px-3 text-end text-muted" style="font-size:.82rem">
-        {% if row.jst_cost != "-" %}{{ row.jst_cost|floatformat:2 }}{% else %}-{% endif %}
+    <td class="px-3 text-center fw-bold">
+        {% if row.jst_stock != "-" %}{{ row.jst_stock|intcomma }}{% else %}-{% endif %}
+    </td>
+    <td class="px-3 text-end fw-bold" style="font-size:.82rem">
+        {% if p.unit_cost is not None %}{{ p.unit_cost|floatformat:2|intcomma }}{% else %}-{% endif %}
+    </td>
+    <td class="px-3 text-center text-muted" style="font-size:.78rem">
+        {{ p.date_added|date:"d/m/Y" }}
     </td>
     <td class="px-3 text-center text-muted" style="font-size:.78rem">
         {% if row.jst_last_order_date %}{{ row.jst_last_order_date|date:"d/m/Y" }}{% else %}-{% endif %}
@@ -94,7 +100,7 @@
 {% endwith %}
 {% empty %}
 <tr>
-    <td colspan="13" class="text-center py-5 text-muted">
+    <td colspan="14" class="text-center py-5 text-muted">
         <i class="fa-solid fa-inbox fa-2x mb-2 d-block opacity-30"></i>
         ไม่มีรายการสินค้าโล๊ะ
     </td>

@@ -23,6 +23,9 @@ class ClearanceProduct(models.Model):
     )
 
     date_added = models.DateField(default=date.today, verbose_name="วันที่ลงข้อมูล")
+    unit_cost = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True, verbose_name="ต้นทุนสินค้า"
+    )
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default=STATUS_WAIT, verbose_name="สถานะ"
     )

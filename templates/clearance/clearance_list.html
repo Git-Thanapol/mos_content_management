@@ -66,6 +66,7 @@
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">โปรโมชั่น เก่า/ใหม่</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">สต็อกคงเหลือ</th>
                     <th class="py-3 px-3 text-end" style="white-space:nowrap">ต้นทุนสินค้า</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่ลงข้อมูล</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่สั่งซื้อล่าสุด</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่ดำเนินการ</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่เรียบร้อย</th>
@@ -78,7 +79,7 @@
                    hx-get="{% url 'clearance:clearance_table_partial' %}?status={{ current_status }}&q={{ current_q }}"
                    hx-trigger="load, refresh"
                    hx-swap="innerHTML">
-                <tr><td colspan="13" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
+                <tr><td colspan="14" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
             </tbody>
         </table>
     </div>
