@@ -21,7 +21,7 @@ def _stat_cards(qs_all):
     done = qs_all.filter(status=GraphicJob.STATUS_DONE).count()
     total = qs_all.count()
     backlog = wait + prog
-    late = qs_all.filter(deadline__lt=today).exclude(status=GraphicJob.STATUS_DONE).count()
+    late = qs_all.filter(deadline__lt=today, submit_date__isnull=True).count()
     # tuples: (label, key, color_class, icon, val, extra_style)
     return [
         ("คิวงานทั้งหมด",   "ALL",            "bg-primary", "fa-layer-group",          total,   "background:#1890FF"),
@@ -46,7 +46,7 @@ def _apply_filters(qs, request):
     if status == "งานที่ค้าง":
         qs = qs.exclude(status=GraphicJob.STATUS_DONE)
     elif status == "งานส่งล่าช้า":
-        qs = qs.filter(deadline__lt=date.today()).exclude(status=GraphicJob.STATUS_DONE)
+        qs = qs.filter(deadline__lt=date.today(), submit_date__isnull=True)
     elif status != "ALL":
         qs = qs.filter(status=status)
 

@@ -222,6 +222,13 @@ function addRefRow() {
     document.getElementById('new-ref-container').insertAdjacentHTML('beforeend', tpl);
 }
 
+function toggleQtyWidget(checkbox) {
+    const widget = checkbox.closest('.d-flex').querySelector('.qty-widget');
+    if (!widget) return;
+    widget.style.opacity = checkbox.checked ? '1' : '0.3';
+    widget.style.pointerEvents = checkbox.checked ? 'auto' : 'none';
+}
+
 // Clear the new-type name input after HTMX swap
 document.body.addEventListener('htmx:afterSwap', function(e) {
     if (e.target.id === 'media-options') {

@@ -17,10 +17,12 @@
                value="{{ mt.pk }}"
                id="mt-{{ mt.pk }}"
                {% if mt.pk in checked_ids %}checked{% endif %}
-               style="cursor:pointer">
+               style="cursor:pointer"
+               onchange="toggleQtyWidget(this)">
         <label class="form-check-label flex-grow-1" for="mt-{{ mt.pk }}"
                style="cursor:pointer;font-size:.82rem;user-select:none">{{ mt.name }}</label>
-        <div class="d-flex align-items-center gap-1 flex-shrink-0" style="color:#94a3b8">
+        <div class="d-flex align-items-center gap-1 flex-shrink-0 qty-widget"
+             style="color:#94a3b8;transition:opacity .15s;{% if mt.pk not in checked_ids %}opacity:.3;pointer-events:none{% endif %}">
             <span style="font-size:.7rem">จำนวน</span>
             <input type="number" name="media_qty_{{ mt.pk }}"
                    value="{{ checked_quantities|get_qty:mt.pk }}"
@@ -50,10 +52,12 @@
                value="{{ mt.pk }}"
                id="mt-{{ mt.pk }}"
                {% if mt.pk in checked_ids %}checked{% endif %}
-               style="cursor:pointer">
+               style="cursor:pointer"
+               onchange="toggleQtyWidget(this)">
         <label class="form-check-label flex-grow-1" for="mt-{{ mt.pk }}"
                style="cursor:pointer;font-size:.82rem;user-select:none">{{ mt.name }}</label>
-        <div class="d-flex align-items-center gap-1 flex-shrink-0" style="color:#94a3b8">
+        <div class="d-flex align-items-center gap-1 flex-shrink-0 qty-widget"
+             style="color:#94a3b8;transition:opacity .15s;{% if mt.pk not in checked_ids %}opacity:.3;pointer-events:none{% endif %}">
             <span style="font-size:.7rem">จำนวน</span>
             <input type="number" name="media_qty_{{ mt.pk }}"
                    value="{{ checked_quantities|get_qty:mt.pk }}"
