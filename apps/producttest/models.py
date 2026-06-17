@@ -42,7 +42,7 @@ class TestProduct(models.Model):
     detail = models.TextField(blank=True, verbose_name="รายละเอียดการทำงาน / หมายเหตุ")
     image = models.ImageField(upload_to="products/", null=True, blank=True)
     upload_date = models.DateField(verbose_name="วันที่ลงข้อมูล")
-    start_date = models.DateField(verbose_name="วันที่เริ่มทดสอบ")
+    start_date = models.DateField(null=True, blank=True, verbose_name="วันที่เริ่มทดสอบ")
     end_date = models.DateField(null=True, blank=True, verbose_name="วันที่สิ้นสุดทดสอบ")
     manual_status = models.CharField(
         max_length=30,

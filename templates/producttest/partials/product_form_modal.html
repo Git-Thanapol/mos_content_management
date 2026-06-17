@@ -66,7 +66,7 @@
                             {{ form.info }}
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">รายละเอียดการทำงาน / หมายเหตุ</label>
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">ข้อมูลสื่อ</label>
                             {{ form.detail }}
                         </div>
                     </div>
@@ -78,7 +78,7 @@
                             {{ form.upload_date }}
                         </div>
                         <div class="col-sm-4">
-                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">วันที่เริ่มทดสอบ *</label>
+                            <label class="form-label fw-bold" style="font-size:.72rem;color:#475569">วันที่เริ่มทดสอบ</label>
                             {{ form.start_date }}
                         </div>
                         <div class="col-sm-4">
@@ -119,35 +119,46 @@
 
                     <!-- Row 5: Price dynamic rows -->
                     <div class="p-3 rounded-3" style="border:1px solid #e2e8f0;background:white">
-                        <div class="d-flex justify-content-between align-items-center pb-2 mb-2" style="border-bottom:1px solid #f1f5f9">
-                            <label class="fw-bold mb-0" style="font-size:.8rem">
-                                <i class="fa-solid fa-tag me-1" style="color:#4f46e5"></i>ราคาทดสอบ
-                            </label>
+                        <div class="text-center py-2 mb-3 rounded-3" style="background:#4f46e5">
+                            <span style="font-size:.85rem;font-weight:700;color:white">
+                                <i class="fa-solid fa-tag me-2"></i>ราคาทดสอบสินค้า
+                            </span>
                         </div>
                         <div id="price-dynamic-container" class="d-flex flex-column gap-2 mb-2">
                             {% for pr in prices %}
-                            <div class="d-flex gap-2 align-items-center price-edit-row rounded-3 py-1 px-1"
-                                 style="background:#f8fafc;border:1px solid #f1f5f9">
+                            <div class="d-flex gap-2 align-items-center price-edit-row rounded-3 p-2"
+                                 style="background:white;border:1px solid #e2e8f0;transition:border-color .15s"
+                                 onmouseover="this.style.borderColor='#a5b4fc'"
+                                 onmouseout="this.style.borderColor='#e2e8f0'">
                                 <div class="flex-grow-1">
                                     <input type="text" class="form-control form-control-sm price-edit-inp fw-bold"
                                            value="{{ pr.value }}" placeholder="ระบุราคาทดสอบ..."
-                                           style="font-size:.75rem;color:#4f46e5">
+                                           style="background:#f8fafc;border-color:#e2e8f0;color:#4f46e5;font-size:.85rem">
                                 </div>
-                                <div class="col-1 text-center">
-                                    <button type="button" onclick="this.closest('.price-edit-row').remove()"
-                                            class="btn btn-sm p-0 border-0"
-                                            style="color:#94a3b8;background:none;transition:color .15s"
-                                            onmouseover="this.style.color='#f43f5e'"
-                                            onmouseout="this.style.color='#94a3b8'">
-                                        <i class="fa-solid fa-circle-xmark"></i>
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-sm rounded-2 border"
+                                            onclick="copyPriceEditRow(this)"
+                                            style="width:36px;height:36px;background:#f8fafc;color:#94a3b8;border-color:#e2e8f0"
+                                            onmouseover="this.style.background='#eef2ff';this.style.color='#4f46e5'"
+                                            onmouseout="this.style.background='#f8fafc';this.style.color='#94a3b8'"
+                                            title="คัดลอกราคา">
+                                        <i class="fa-regular fa-copy" style="font-size:.75rem"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm rounded-2 border"
+                                            onclick="this.closest('.price-edit-row').remove()"
+                                            style="width:36px;height:36px;background:#f8fafc;color:#94a3b8;border-color:#e2e8f0"
+                                            onmouseover="this.style.background='#fff1f2';this.style.color='#f43f5e'"
+                                            onmouseout="this.style.background='#f8fafc';this.style.color='#94a3b8'"
+                                            title="ลบรายการ">
+                                        <i class="fa-solid fa-trash-can" style="font-size:.75rem"></i>
                                     </button>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
                         <button type="button" onclick="addPriceEditRow()"
-                                class="w-100 py-2 rounded-3 fw-bold border-0"
-                                style="border:2px dashed #c7d2fe !important;background:white;color:#4f46e5;font-size:.8rem;transition:all .15s"
+                                class="w-100 mt-1 py-2 rounded-3 fw-bold"
+                                style="border:2px dashed #c7d2fe;background:white;color:#4f46e5;font-size:.8rem;transition:all .15s"
                                 onmouseover="this.style.background='#eef2ff';this.style.borderColor='#4f46e5'"
                                 onmouseout="this.style.background='white';this.style.borderColor='#c7d2fe'">
                             <i class="fa-solid fa-plus-circle me-1"></i>เพิ่มแถวราคาทดสอบ
@@ -253,22 +264,37 @@ function addPageRow(page='', url='') {
 
 function addPriceEditRow(value='') {
     const div = document.createElement('div');
-    div.className = 'd-flex gap-2 align-items-center price-edit-row rounded-3 py-1 px-1';
-    div.style.cssText = 'background:#f8fafc;border:1px solid #f1f5f9';
+    div.className = 'd-flex gap-2 align-items-center price-edit-row rounded-3 p-2';
+    div.style.cssText = 'background:white;border:1px solid #e2e8f0;transition:border-color .15s';
+    div.onmouseover = () => div.style.borderColor = '#a5b4fc';
+    div.onmouseout  = () => div.style.borderColor = '#e2e8f0';
     div.innerHTML = `
         <div class="flex-grow-1">
             <input type="text" class="form-control form-control-sm price-edit-inp fw-bold"
                    value="${value}" placeholder="ระบุราคาทดสอบ..."
-                   style="font-size:.75rem;color:#4f46e5">
+                   style="background:#f8fafc;border-color:#e2e8f0;color:#4f46e5;font-size:.85rem">
         </div>
-        <div class="col-1 text-center">
-            <button type="button" onclick="this.closest('.price-edit-row').remove()"
-                    class="btn btn-sm p-0 border-0" style="color:#94a3b8;background:none"
-                    onmouseover="this.style.color='#f43f5e'" onmouseout="this.style.color='#94a3b8'">
-                <i class="fa-solid fa-circle-xmark"></i>
+        <div class="d-flex gap-1">
+            <button type="button" class="btn btn-sm rounded-2 border" onclick="copyPriceEditRow(this)"
+                    style="width:36px;height:36px;background:#f8fafc;color:#94a3b8;border-color:#e2e8f0"
+                    onmouseover="this.style.background='#eef2ff';this.style.color='#4f46e5'"
+                    onmouseout="this.style.background='#f8fafc';this.style.color='#94a3b8'" title="คัดลอกราคา">
+                <i class="fa-regular fa-copy" style="font-size:.75rem"></i>
+            </button>
+            <button type="button" class="btn btn-sm rounded-2 border" onclick="this.closest('.price-edit-row').remove()"
+                    style="width:36px;height:36px;background:#f8fafc;color:#94a3b8;border-color:#e2e8f0"
+                    onmouseover="this.style.background='#fff1f2';this.style.color='#f43f5e'"
+                    onmouseout="this.style.background='#f8fafc';this.style.color='#94a3b8'" title="ลบรายการ">
+                <i class="fa-solid fa-trash-can" style="font-size:.75rem"></i>
             </button>
         </div>`;
     document.getElementById('price-dynamic-container').appendChild(div);
+}
+
+function copyPriceEditRow(btn) {
+    const val = btn.closest('.price-edit-row').querySelector('.price-edit-inp').value.trim();
+    if (!val) { showToast('ไม่มีข้อมูลให้คัดลอก', 'error'); return; }
+    navigator.clipboard.writeText(val).then(() => showToast('คัดลอก: ' + val));
 }
 
 function collectFormData() {
