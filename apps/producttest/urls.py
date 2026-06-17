@@ -17,6 +17,9 @@ urlpatterns = [
     # Pages
     path("products/<int:pk>/pages/", views.product_pages, name="product_pages"),
 
+    # Info / media popup (read-only)
+    path("products/<int:pk>/info/", views.product_info, name="product_info"),
+
     # Supervisor
     path("supervisor/", views.supervisor_view, name="supervisor"),
     path("htmx/supervisor/", views.supervisor_table_partial, name="supervisor_table_partial"),

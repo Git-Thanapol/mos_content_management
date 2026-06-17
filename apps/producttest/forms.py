@@ -76,13 +76,23 @@ class CommissionForm(forms.ModelForm):
 
 
 class DateRangeForm(forms.Form):
+    DATE_FIELD_CHOICES = [
+        ("upload_date", "วันที่ลงข้อมูล"),
+        ("start_date", "วันที่ทดสอบ"),
+    ]
+    date_field = forms.ChoiceField(
+        choices=DATE_FIELD_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select form-select-sm"}),
+        label="กรองตามวันที่",
+    )
     date_from = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+        widget=forms.DateInput(attrs={"class": "form-control form-control-sm", "type": "date"}),
         label="ตั้งแต่วันที่",
     )
     date_to = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+        widget=forms.DateInput(attrs={"class": "form-control form-control-sm", "type": "date"}),
         label="ถึงวันที่",
     )

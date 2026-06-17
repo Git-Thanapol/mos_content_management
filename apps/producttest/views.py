@@ -100,7 +100,7 @@ def product_list(request):
     employees = Employee.objects.filter(is_active=True)
     date_form = DateRangeForm(request.GET or None)
     stat_cards = [
-        ("ทั้งหมด",         "ALL",              "bg-secondary",  "fa-boxes-stacked",     stats["all"]),
+        ("ทั้งหมด",         "ALL",              "bg-primary",  "fa-boxes-stacked",     stats["all"]),
         ("รอดำเนินการ",     "รอดำเนินการ",      "bg-secondary",  "fa-clock-rotate-left", stats["wait"]),
         ("กำลังดำเนินการ",  "กำลังดำเนินการ",   "bg-warning",    "fa-spinner",           stats["prog"]),
         ("Test ผ่าน",       "Test ผ่าน",         "bg-success",    "fa-circle-check",      stats["pass"]),
@@ -116,6 +116,7 @@ def product_list(request):
         "current_status": request.GET.get("status", "ALL"),
         "current_employee": request.GET.get("employee", "ALL"),
         "current_q": request.GET.get("q", ""),
+        "current_date_field": request.GET.get("date_field", "upload_date"),
     }
     return render(request, "producttest/product_list.html", context)
 
@@ -130,6 +131,9 @@ def product_table_partial(request):
     status = request.GET.get("status", "ALL")
     employee = request.GET.get("employee", "ALL")
     search = request.GET.get("q", "").strip()
+    date_field = request.GET.get("date_field", "upload_date")
+    if date_field not in {"upload_date", "start_date"}:
+        date_field = "upload_date"
     date_from = request.GET.get("date_from", "")
     date_to = request.GET.get("date_to", "")
 
@@ -142,11 +146,11 @@ def product_table_partial(request):
     if date_from:
         d = parse_date(date_from)
         if d:
-            qs = qs.filter(upload_date__gte=d)
+            qs = qs.filter(**{f"{date_field}__gte": d})
     if date_to:
         d = parse_date(date_to)
         if d:
-            qs = qs.filter(upload_date__lte=d)
+            qs = qs.filter(**{f"{date_field}__lte": d})
 
     products = list(qs)
     if status != "ALL":
@@ -273,6 +277,15 @@ def product_pages(request, pk):
     })
 
 
+@system_required("producttest")
+def product_info(request, pk):
+    """Read-only info/media viewer popup."""
+    product = get_object_or_404(TestProduct, pk=pk)
+    return render(request, "producttest/partials/info_modal.html", {
+        "product": product,
+    })
+
+
 # ── Supervisor ────────────────────────────────────────────────────────────────
 
 @system_required("producttest")
@@ -298,9 +311,9 @@ def supervisor_view(request):
     date_form = DateRangeForm(request.GET or None)
 
     sup_stat_cards = [
-        ("ทั้งหมด",              "ALL",                   "bg-secondary",  "fa-layer-group",       stats["all"]),
-        ("รอกรอกค่าคอม",        "รอกรอกค่าคอม",          "bg-warning",    "fa-file-pen",          stats["wait_fill"]),
-        ("รอจ่ายค่าคอม",        "รอจ่ายค่าคอม",          "bg-primary",    "fa-hourglass-half",    stats["wait_pay"]),
+        ("ทั้งหมด",              "ALL",                   "bg-primary",  "fa-layer-group",       stats["all"]),
+        ("รอกรอกค่าคอม",        "รอกรอกค่าคอม",          "bg-secondary",    "fa-file-pen",          stats["wait_fill"]),
+        ("รอจ่ายค่าคอม",        "รอจ่ายค่าคอม",          "bg-info",    "fa-hourglass-half",    stats["wait_pay"]),
         ("จ่ายค่าคอมเรียบร้อย", "จ่ายค่าคอมเรียบร้อย",  "bg-success",    "fa-money-bill-wave",   stats["paid"]),
     ]
     return render(request, "producttest/supervisor.html", {

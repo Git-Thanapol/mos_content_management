@@ -8,7 +8,7 @@
     {% for label,key,color,icon,val in stat_cards %}
     <div class="col-6 col-lg-2">
         <div class="stat-card p-3 text-white {{ color }} {% if current_status == key %}active{% endif %}"
-             hx-get="{% url 'product_table_partial' %}?status={{ key }}&employee={{ current_employee }}&q={{ current_q }}&date_from={{ request.GET.date_from }}&date_to={{ request.GET.date_to }}"
+             hx-get="{% url 'product_table_partial' %}?status={{ key }}&employee={{ current_employee }}&q={{ current_q }}&date_field={{ current_date_field }}&date_from={{ request.GET.date_from }}&date_to={{ request.GET.date_to }}"
              hx-target="#product-table"
              hx-swap="innerHTML"
              hx-push-url="false"
@@ -49,6 +49,9 @@
                        hx-include="#filter-form"
                        hx-trigger="keyup changed delay:400ms">
             </div>
+            <div class="col-12 col-sm-6 col-md-2">
+                {{ date_form.date_field }}
+            </div>
             <div class="col-6 col-md-2">
                 {{ date_form.date_from }}
             </div>
@@ -77,7 +80,7 @@
                     <th class="py-3 px-3" style="white-space:nowrap">Product ID</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">รูปสินค้า</th>
                     <th class="py-3 px-3" style="white-space:nowrap">ชื่อสินค้า</th>
-                    <th class="py-3 px-3" style="white-space:nowrap">ข้อมูลสินค้า / รายละเอียด</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ข้อมูลสินค้า / ข้อมูลสื่อ</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">ราคาทดสอบ</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่ลงข้อมูล</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่เริ่มทดสอบ</th>
@@ -91,7 +94,8 @@
                 </tr>
             </thead>
             <tbody id="product-table"
-                   hx-get="{% url 'product_table_partial' %}?status={{ current_status }}&employee={{ current_employee }}&q={{ current_q }}"
+                   hx-get="{% url 'product_table_partial' %}"
+                   hx-include="#filter-form"
                    hx-trigger="load, refresh"
                    hx-swap="innerHTML">
                 <tr><td colspan="15" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
@@ -112,8 +116,8 @@ function setActiveStatCard(el, status) {
     document.getElementById('hidden-status').value = status;
 }
 
-// Date range filter auto-submit
-document.querySelectorAll('[name="date_from"],[name="date_to"]').forEach(el => {
+// Date filter auto-submit (field selector + range inputs)
+document.querySelectorAll('[name="date_field"],[name="date_from"],[name="date_to"]').forEach(el => {
     el.addEventListener('change', () => {
         htmx.trigger('#product-table', 'refresh');
     });

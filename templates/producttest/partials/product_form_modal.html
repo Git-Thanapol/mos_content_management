@@ -117,7 +117,45 @@
                         </div>
                     </div>
 
-                    <!-- Row 5: PAGE dynamic rows -->
+                    <!-- Row 5: Price dynamic rows -->
+                    <div class="p-3 rounded-3" style="border:1px solid #e2e8f0;background:white">
+                        <div class="d-flex justify-content-between align-items-center pb-2 mb-2" style="border-bottom:1px solid #f1f5f9">
+                            <label class="fw-bold mb-0" style="font-size:.8rem">
+                                <i class="fa-solid fa-tag me-1" style="color:#4f46e5"></i>ราคาทดสอบ
+                            </label>
+                        </div>
+                        <div id="price-dynamic-container" class="d-flex flex-column gap-2 mb-2">
+                            {% for pr in prices %}
+                            <div class="d-flex gap-2 align-items-center price-edit-row rounded-3 py-1 px-1"
+                                 style="background:#f8fafc;border:1px solid #f1f5f9">
+                                <div class="flex-grow-1">
+                                    <input type="text" class="form-control form-control-sm price-edit-inp fw-bold"
+                                           value="{{ pr.value }}" placeholder="ระบุราคาทดสอบ..."
+                                           style="font-size:.75rem;color:#4f46e5">
+                                </div>
+                                <div class="col-1 text-center">
+                                    <button type="button" onclick="this.closest('.price-edit-row').remove()"
+                                            class="btn btn-sm p-0 border-0"
+                                            style="color:#94a3b8;background:none;transition:color .15s"
+                                            onmouseover="this.style.color='#f43f5e'"
+                                            onmouseout="this.style.color='#94a3b8'">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" onclick="addPriceEditRow()"
+                                class="w-100 py-2 rounded-3 fw-bold border-0"
+                                style="border:2px dashed #c7d2fe !important;background:white;color:#4f46e5;font-size:.8rem;transition:all .15s"
+                                onmouseover="this.style.background='#eef2ff';this.style.borderColor='#4f46e5'"
+                                onmouseout="this.style.background='white';this.style.borderColor='#c7d2fe'">
+                            <i class="fa-solid fa-plus-circle me-1"></i>เพิ่มแถวราคาทดสอบ
+                        </button>
+                        <input type="hidden" name="prices_json" id="prices-json">
+                    </div>
+
+                    <!-- Row 6: PAGE dynamic rows -->
                     <div class="p-3 rounded-3" style="border:1px solid #e2e8f0;background:white">
                         <div class="d-flex justify-content-between align-items-center pb-2 mb-2" style="border-bottom:1px solid #f1f5f9">
                             <label class="fw-bold mb-0" style="font-size:.8rem">
@@ -213,7 +251,34 @@ function addPageRow(page='', url='') {
     document.getElementById('page-dynamic-container').appendChild(div);
 }
 
+function addPriceEditRow(value='') {
+    const div = document.createElement('div');
+    div.className = 'd-flex gap-2 align-items-center price-edit-row rounded-3 py-1 px-1';
+    div.style.cssText = 'background:#f8fafc;border:1px solid #f1f5f9';
+    div.innerHTML = `
+        <div class="flex-grow-1">
+            <input type="text" class="form-control form-control-sm price-edit-inp fw-bold"
+                   value="${value}" placeholder="ระบุราคาทดสอบ..."
+                   style="font-size:.75rem;color:#4f46e5">
+        </div>
+        <div class="col-1 text-center">
+            <button type="button" onclick="this.closest('.price-edit-row').remove()"
+                    class="btn btn-sm p-0 border-0" style="color:#94a3b8;background:none"
+                    onmouseover="this.style.color='#f43f5e'" onmouseout="this.style.color='#94a3b8'">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+        </div>`;
+    document.getElementById('price-dynamic-container').appendChild(div);
+}
+
 function collectFormData() {
+    const prices = [];
+    document.querySelectorAll('.price-edit-inp').forEach(i => {
+        const v = i.value.trim();
+        if (v) prices.push(v);
+    });
+    document.getElementById('prices-json').value = JSON.stringify(prices);
+
     const pages = [];
     document.querySelectorAll('.page-row-item').forEach(r => {
         const page = r.querySelector('.page-inp')?.value.trim() || '';
