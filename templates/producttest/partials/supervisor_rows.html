@@ -4,23 +4,23 @@
 <tr style="border-bottom:1px solid #f1f5f9;transition:background .15s"
     onmouseover="this.style.background='#f8fafc'"
     onmouseout="this.style.background=''">
-    <td class="py-2 px-3 text-center">
-        <input type="checkbox" class="form-check-input" style="width:1rem;height:1rem">
+    <td class="py-2 px-2 text-center">
+        <input type="checkbox" class="form-check-input" style="width:.9rem;height:.9rem">
     </td>
-    <td class="py-2 px-3" style="font-weight:700;color:#1e293b;white-space:nowrap">{{ p.pid }}</td>
-    <td class="py-2 px-3 text-center">
+    <td class="py-2 px-2" style="font-weight:700;color:#1e293b;font-size:.7rem;white-space:nowrap">{{ p.pid }}</td>
+    <td class="py-2 px-2 text-center">
         {% if p.image %}
         <img src="{{ p.image.url }}" class="rounded-2 mx-auto d-block"
-             style="width:36px;height:36px;object-fit:cover;border:1px solid #e2e8f0">
+             style="width:30px;height:30px;object-fit:cover;border:1px solid #e2e8f0">
         {% else %}
         <div class="rounded-2 d-flex align-items-center justify-content-center mx-auto"
-             style="width:36px;height:36px;background:#f1f5f9;border:1px solid #e2e8f0">
-            <i class="fa-regular fa-image" style="color:#94a3b8;font-size:.75rem"></i>
+             style="width:30px;height:30px;background:#f1f5f9;border:1px solid #e2e8f0">
+            <i class="fa-regular fa-image" style="color:#94a3b8;font-size:.7rem"></i>
         </div>
         {% endif %}
     </td>
-    <td class="py-2 px-3" style="font-weight:700;color:#1e293b;font-size:.8rem;white-space:nowrap">{{ p.name }}</td>
-    <td class="py-2 px-3 text-center">
+    <td class="py-2 px-2" style="font-weight:700;color:#1e293b;font-size:.7rem;white-space:nowrap">{{ p.name }}</td>
+    <td class="py-2 px-2 text-center">
         {% if p.info or p.detail %}
         <button class="px-3 py-1 rounded-2 border-0"
                 style="font-size:.62rem;font-weight:700;background:#f0fdf4;color:#059669;border:1px solid #bbf7d0 !important;transition:all .15s"
@@ -33,7 +33,7 @@
         </button>
         {% else %}<span style="font-size:.65rem;color:#cbd5e1">-</span>{% endif %}
     </td>
-    <td class="py-2 px-3 text-center">
+    <td class="py-2 px-2 text-center">
         <button class="position-relative rounded-3 border-0 p-2"
                 style="background:#fff1f2;color:#f43f5e;transition:all .15s"
                 onmouseover="this.style.background='#f43f5e';this.style.color='white'"
@@ -48,19 +48,19 @@
             {% endif %}
         </button>
     </td>
-    <td class="py-2 px-3 text-center" style="font-size:.68rem;font-weight:500;white-space:nowrap">{{ p.upload_date|thai_date }}</td>
-    <td class="py-2 px-3 text-center" style="font-size:.68rem;font-weight:500;color:#4f46e5;white-space:nowrap">{{ p.start_date|thai_date }}</td>
-    <td class="py-2 px-3 text-center" style="font-size:.68rem;font-weight:500;color:#f43f5e;white-space:nowrap">{{ p.end_date|thai_date }}</td>
-    <td class="py-2 px-3 text-center" style="font-weight:700;color:#475569;font-size:.7rem;white-space:nowrap">
+    <td class="py-2 px-2 text-center" style="font-size:.68rem;font-weight:500;white-space:nowrap">{{ p.upload_date|thai_date }}</td>
+    <td class="py-2 px-2 text-center" style="font-size:.68rem;font-weight:500;color:#4f46e5;white-space:nowrap">{{ p.start_date|thai_date }}</td>
+    <td class="py-2 px-2 text-center" style="font-size:.68rem;font-weight:500;color:#f43f5e;white-space:nowrap">{{ p.end_date|thai_date }}</td>
+    <td class="py-2 px-2 text-center" style="font-weight:700;color:#475569;font-size:.7rem;white-space:nowrap">
         {% if p.test_days %}{{ p.test_days }} วัน{% else %}-{% endif %}
     </td>
-    <td class="py-2 px-3" style="font-size:.65rem;font-weight:600;white-space:nowrap">
+    <td class="py-2 px-2" style="font-size:.65rem;font-weight:600;white-space:nowrap">
         {% for g in p.graphic_members.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}
     </td>
-    <td class="py-2 px-3" style="font-size:.65rem;font-weight:600;white-space:nowrap">
+    <td class="py-2 px-2" style="font-size:.65rem;font-weight:600;white-space:nowrap">
         {% for m in p.mkt_members.all %}{{ m.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}
     </td>
-    <td class="py-2 px-3 text-center">
+    <td class="py-2 px-2 text-center">
         {% if p.pages.count > 0 %}
         <button class="px-2 py-1 rounded-2 border-0"
                 style="font-size:.62rem;font-weight:700;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe !important;transition:all .15s"
@@ -74,20 +74,20 @@
     </td>
 
     <!-- Performance columns — indigo background -->
-    <td class="py-2 px-3 text-end fw-bold" style="font-size:.7rem;background:#eef2ff;border-left:1px solid #c7d2fe">{{ perf.orders|default:0 }}</td>
-    <td class="py-2 px-3 text-end fw-bold" style="font-size:.7rem;background:#eef2ff;color:#2563eb">{{ perf.sales|format_decimal }}</td>
-    <td class="py-2 px-3 text-end" style="font-size:.7rem;background:#eef2ff">
+    <td class="py-2 px-2 text-end fw-bold" style="font-size:.7rem;background:#eef2ff;border-left:1px solid #c7d2fe">{{ perf.orders|default:0 }}</td>
+    <td class="py-2 px-2 text-end fw-bold" style="font-size:.7rem;background:#eef2ff;color:#2563eb">{{ perf.sales|format_decimal }}</td>
+    <td class="py-2 px-2 text-end" style="font-size:.7rem;background:#eef2ff">
         <div class="fw-bold" style="color:#2563eb">{{ perf.ads|format_decimal }}</div>
         <div style="font-size:.58rem;color:#94a3b8">({{ perf.ads_pct }}%)</div>
     </td>
-    <td class="py-2 px-3 text-end" style="font-size:.7rem;background:#eef2ff;border-right:1px solid #c7d2fe">
+    <td class="py-2 px-2 text-end" style="font-size:.7rem;background:#eef2ff;border-right:1px solid #c7d2fe">
         <div class="fw-bold" style="color:{% if perf.profit_is_negative %}#f43f5e{% else %}#059669{% endif %}">
             {{ perf.profit|format_decimal }}
         </div>
         <div style="font-size:.58rem;color:#94a3b8">({{ perf.profit_pct }}%)</div>
     </td>
 
-    <td class="py-2 px-3 text-center">
+    <td class="py-2 px-2 text-center">
         {% with st=p.computed_status %}
         {% if st == "Test ผ่าน" %}
             <span class="px-2 py-1 rounded-2" style="font-size:.6rem;font-weight:700;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">ผ่าน</span>
@@ -102,11 +102,11 @@
         {% endif %}
         {% endwith %}
     </td>
-    <td class="py-2 px-3 text-end" style="font-size:.72rem">
+    <td class="py-2 px-2 text-end" style="font-size:.72rem">
         <div class="fw-bold" style="color:#059669">{{ comm.total|format_decimal }}</div>
         <div style="font-size:.58rem;color:#94a3b8">เฉลี่ย {{ comm.per_person|format_decimal }}/คน</div>
     </td>
-    <td class="py-2 px-3 text-center">
+    <td class="py-2 px-2 text-center">
         {% if comm.status == "จ่ายค่าคอมเรียบร้อย" %}
             <span class="px-2 py-1 rounded-2" style="font-size:.6rem;font-weight:700;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">จ่ายเรียบร้อย</span>
         {% elif comm.status == "รอจ่ายค่าคอม" %}
@@ -117,10 +117,10 @@
             <span class="px-2 py-1 rounded-2" style="font-size:.6rem;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fde68a">รอกรอกข้อมูล</span>
         {% endif %}
     </td>
-    <td class="py-2 px-3" style="font-size:.65rem;color:#64748b;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+    <td class="py-2 px-2" style="font-size:.65rem;color:#64748b;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
         {{ comm.note|default:"-" }}
     </td>
-    <td class="py-2 px-3 text-center">
+    <td class="py-2 px-2 text-center">
         {% if comm.status == "ไม่ผ่าน" %}
         <button class="px-2 py-1 rounded-2 border-0" disabled
                 style="font-size:.62rem;font-weight:700;background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0 !important;cursor:not-allowed;opacity:.55">
@@ -138,7 +138,7 @@
         {% endif %}
     </td>
     <!-- หลักฐานโอน column — separate from การจัดการ -->
-    <td class="py-2 px-3 text-center">
+    <td class="py-2 px-2 text-center">
         {% if comm.slips.count > 0 %}
         <button class="px-2 py-1 rounded-2 border-0"
                 style="font-size:.62rem;font-weight:700;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0 !important;transition:all .15s"
