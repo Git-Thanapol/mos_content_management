@@ -1,3 +1,4 @@
+{% load graphicqueue_tags %}
 <div class="modal fade" id="viewMediaModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -19,8 +20,14 @@
                     </h6>
                     <ul class="list-unstyled mb-0 ps-1">
                         {% for mt in video_media %}
-                        <li class="mb-1 small">
-                            <i class="fa-solid fa-check text-success me-2" style="font-size:.7rem"></i>{{ mt.name }}
+                        <li class="mb-1 small d-flex align-items-center justify-content-between">
+                            <span><i class="fa-solid fa-check text-success me-2" style="font-size:.7rem"></i>{{ mt.name }}</span>
+                            {% with qty=media_quantities|get_qty:mt.pk %}
+                            <span class="badge ms-2 flex-shrink-0"
+                                  style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:.65rem">
+                                {{ qty }} ชุด
+                            </span>
+                            {% endwith %}
                         </li>
                         {% endfor %}
                     </ul>
@@ -34,8 +41,14 @@
                     </h6>
                     <ul class="list-unstyled mb-0 ps-1">
                         {% for mt in image_media %}
-                        <li class="mb-1 small">
-                            <i class="fa-solid fa-check text-success me-2" style="font-size:.7rem"></i>{{ mt.name }}
+                        <li class="mb-1 small d-flex align-items-center justify-content-between">
+                            <span><i class="fa-solid fa-check text-success me-2" style="font-size:.7rem"></i>{{ mt.name }}</span>
+                            {% with qty=media_quantities|get_qty:mt.pk %}
+                            <span class="badge ms-2 flex-shrink-0"
+                                  style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-size:.65rem">
+                                {{ qty }} ชุด
+                            </span>
+                            {% endwith %}
                         </li>
                         {% endfor %}
                     </ul>

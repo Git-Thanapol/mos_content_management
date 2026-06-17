@@ -119,9 +119,19 @@ def queue_form(request, pk=None):
             with transaction.atomic():
                 job = form.save()
 
-                # Media types M2M
+                # Media types M2M + quantities
                 media_ids = request.POST.getlist("media_type_ids")
                 job.media_types.set(MediaType.objects.filter(pk__in=media_ids))
+                quantities = {}
+                for pk in media_ids:
+                    if pk.isdigit():
+                        qty_str = request.POST.get(f"media_qty_{pk}", "1")
+                        try:
+                            quantities[pk] = max(1, int(qty_str))
+                        except (ValueError, TypeError):
+                            quantities[pk] = 1
+                job.media_quantities = quantities
+                job.save(update_fields=["media_quantities"])
 
                 # Delete selected existing ref images
                 delete_ids = request.POST.getlist("delete_ref_ids")
@@ -146,6 +156,7 @@ def queue_form(request, pk=None):
         form = GraphicJobForm(instance=instance)
 
     checked_ids = set(instance.media_types.values_list("pk", flat=True)) if instance else set()
+    checked_quantities = {str(k): v for k, v in (instance.media_quantities or {}).items()} if instance else {}
     video_types = MediaType.objects.filter(category=MediaType.CATEGORY_VIDEO).order_by("order", "id")
     image_types = MediaType.objects.filter(category=MediaType.CATEGORY_IMAGE).order_by("order", "id")
     existing_refs = list(instance.ref_images.all()) if instance else []
@@ -154,6 +165,7 @@ def queue_form(request, pk=None):
         "form": form,
         "instance": instance,
         "checked_ids": checked_ids,
+        "checked_quantities": checked_quantities,
         "video_types": video_types,
         "image_types": image_types,
         "existing_refs": existing_refs,
@@ -185,6 +197,7 @@ def media_options(request):
         "video_types": video_types,
         "image_types": image_types,
         "checked_ids": checked_ids,
+        "checked_quantities": {},
     })
 
 
@@ -197,6 +210,17 @@ def media_type_add(request):
     checked_str = request.POST.getlist("media_type_ids")
     checked_ids = set(int(x) for x in checked_str if x.isdigit())
 
+    # Preserve quantity values across the HTMX swap
+    checked_quantities = {}
+    for key, val in request.POST.items():
+        if key.startswith("media_qty_"):
+            pk = key[len("media_qty_"):]
+            if pk.isdigit():
+                try:
+                    checked_quantities[pk] = max(1, int(val))
+                except (ValueError, TypeError):
+                    checked_quantities[pk] = 1
+
     if name:
         order = MediaType.objects.filter(category=category).count()
         mtype, _ = MediaType.objects.get_or_create(
@@ -204,6 +228,7 @@ def media_type_add(request):
             defaults={"category": category, "order": order},
         )
         checked_ids.add(mtype.pk)
+        checked_quantities[str(mtype.pk)] = 1
 
     video_types = MediaType.objects.filter(category=MediaType.CATEGORY_VIDEO).order_by("order", "id")
     image_types = MediaType.objects.filter(category=MediaType.CATEGORY_IMAGE).order_by("order", "id")
@@ -211,6 +236,7 @@ def media_type_add(request):
         "video_types": video_types,
         "image_types": image_types,
         "checked_ids": checked_ids,
+        "checked_quantities": checked_quantities,
     })
 
 
@@ -225,6 +251,7 @@ def view_media_modal(request, pk):
         "job": job,
         "video_media": video_media,
         "image_media": image_media,
+        "media_quantities": {str(k): v for k, v in (job.media_quantities or {}).items()},
     })
 
 

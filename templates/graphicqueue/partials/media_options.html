@@ -1,39 +1,71 @@
+{% load graphicqueue_tags %}
+
 {% if video_types %}
-<div class="mb-2">
-    <h6 class="text-danger fw-bold mb-2" style="font-size:.72rem">1. งานคลิป</h6>
-    <div class="ps-1">
-        {% for mt in video_types %}
-        <div class="form-check mb-1">
-            <input class="form-check-input" type="checkbox"
-                   name="media_type_ids"
-                   value="{{ mt.pk }}"
-                   id="mt-{{ mt.pk }}"
-                   {% if mt.pk in checked_ids %}checked{% endif %}>
-            <label class="form-check-label small" for="mt-{{ mt.pk }}">{{ mt.name }}</label>
-        </div>
-        {% endfor %}
+<div class="mb-3">
+    <div class="d-flex align-items-center px-2 py-1 rounded-2 mb-2"
+         style="background:#fef2f2;border-left:3px solid #ef4444">
+        <i class="fa-solid fa-clapperboard me-2" style="color:#ef4444;font-size:.75rem"></i>
+        <small class="fw-bold" style="color:#dc2626;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em">1. งานคลิป</small>
     </div>
+    {% for mt in video_types %}
+    <div class="d-flex align-items-center gap-2 px-2 py-1 rounded-2 mb-1"
+         style="cursor:pointer;transition:background .1s"
+         onmouseover="this.style.background='#fef2f2'"
+         onmouseout="this.style.background=''">
+        <input class="form-check-input flex-shrink-0 mt-0" type="checkbox"
+               name="media_type_ids"
+               value="{{ mt.pk }}"
+               id="mt-{{ mt.pk }}"
+               {% if mt.pk in checked_ids %}checked{% endif %}
+               style="cursor:pointer">
+        <label class="form-check-label flex-grow-1" for="mt-{{ mt.pk }}"
+               style="cursor:pointer;font-size:.82rem;user-select:none">{{ mt.name }}</label>
+        <div class="d-flex align-items-center gap-1 flex-shrink-0" style="color:#94a3b8">
+            <span style="font-size:.7rem">จำนวน</span>
+            <input type="number" name="media_qty_{{ mt.pk }}"
+                   value="{{ checked_quantities|get_qty:mt.pk }}"
+                   min="1" max="99"
+                   style="width:38px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px;font-size:.78rem;text-align:center;outline:none;-moz-appearance:textfield">
+            <span style="font-size:.7rem">ชุด</span>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endif %}
 
 {% if image_types %}
 <div>
-    <h6 class="text-primary fw-bold mb-2" style="font-size:.72rem">2. งานรูปภาพ</h6>
-    <div class="ps-1">
-        {% for mt in image_types %}
-        <div class="form-check mb-1">
-            <input class="form-check-input" type="checkbox"
-                   name="media_type_ids"
-                   value="{{ mt.pk }}"
-                   id="mt-{{ mt.pk }}"
-                   {% if mt.pk in checked_ids %}checked{% endif %}>
-            <label class="form-check-label small" for="mt-{{ mt.pk }}">{{ mt.name }}</label>
-        </div>
-        {% endfor %}
+    <div class="d-flex align-items-center px-2 py-1 rounded-2 mb-2"
+         style="background:#eff6ff;border-left:3px solid #3b82f6">
+        <i class="fa-solid fa-image me-2" style="color:#3b82f6;font-size:.75rem"></i>
+        <small class="fw-bold" style="color:#1d4ed8;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em">2. งานภาพ</small>
     </div>
+    {% for mt in image_types %}
+    <div class="d-flex align-items-center gap-2 px-2 py-1 rounded-2 mb-1"
+         style="cursor:pointer;transition:background .1s"
+         onmouseover="this.style.background='#eff6ff'"
+         onmouseout="this.style.background=''">
+        <input class="form-check-input flex-shrink-0 mt-0" type="checkbox"
+               name="media_type_ids"
+               value="{{ mt.pk }}"
+               id="mt-{{ mt.pk }}"
+               {% if mt.pk in checked_ids %}checked{% endif %}
+               style="cursor:pointer">
+        <label class="form-check-label flex-grow-1" for="mt-{{ mt.pk }}"
+               style="cursor:pointer;font-size:.82rem;user-select:none">{{ mt.name }}</label>
+        <div class="d-flex align-items-center gap-1 flex-shrink-0" style="color:#94a3b8">
+            <span style="font-size:.7rem">จำนวน</span>
+            <input type="number" name="media_qty_{{ mt.pk }}"
+                   value="{{ checked_quantities|get_qty:mt.pk }}"
+                   min="1" max="99"
+                   style="width:38px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:4px;font-size:.78rem;text-align:center;outline:none;-moz-appearance:textfield">
+            <span style="font-size:.7rem">ชุด</span>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endif %}
 
 {% if not video_types and not image_types %}
-<p class="text-muted small">ยังไม่มีประเภทสื่อ — เพิ่มด้วยช่องด้านล่าง</p>
+<p class="text-muted small text-center py-2">ยังไม่มีประเภทสื่อ — เพิ่มด้วยช่องด้านล่าง</p>
 {% endif %}

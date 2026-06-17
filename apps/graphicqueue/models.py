@@ -71,6 +71,7 @@ class GraphicJob(models.Model):
     work_url = models.CharField(max_length=1000, blank=True, verbose_name="URL ลิ้งค์ส่งงาน")
 
     media_types = models.ManyToManyField(MediaType, blank=True, related_name="jobs", verbose_name="สื่อที่ต้องการทำ")
+    media_quantities = models.JSONField(default=dict, blank=True, verbose_name="จำนวนสื่อต่อประเภท")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -112,7 +112,7 @@
                                 </h6>
 
                                 <div id="media-options">
-                                    {% include "graphicqueue/partials/media_options.html" %}
+                                    {% include "graphicqueue/partials/media_options.html" with checked_quantities=checked_quantities %}
                                 </div>
 
                                 <!-- Add new media type freetext -->
@@ -133,7 +133,7 @@
                                                 hx-post="{% url 'graphicqueue:media_type_add' %}"
                                                 hx-target="#media-options"
                                                 hx-swap="innerHTML"
-                                                hx-include="#media-options input[type=checkbox], [name=new_type_name], [name=new_type_category], [name=csrfmiddlewaretoken]">
+                                                hx-include="#media-options input, [name=new_type_name], [name=new_type_category]">
                                             <i class="fa-solid fa-plus me-1"></i>เพิ่ม
                                         </button>
                                     </div>
@@ -201,6 +201,11 @@
     </div>
 </div>
 
+<style>
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+</style>
 <script>
 function addRefRow() {
     const tpl = `<div class="d-flex gap-2 align-items-start mb-2 new-ref-row">
