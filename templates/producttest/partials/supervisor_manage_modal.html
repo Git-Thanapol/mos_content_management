@@ -75,10 +75,17 @@
                 </div>
 
                 <!-- Commission -->
-                <div class="p-3 rounded-3" style="border:1px solid #e2e8f0;background:white">
-                    <div class="fw-bold mb-3" style="font-size:.7rem;color:#4f46e5;border-bottom:1px solid #f1f5f9;padding-bottom:6px">
+                <div class="p-3 rounded-3" style="border:1px solid {% if commission.status == 'ไม่ผ่าน' %}#fca5a5{% else %}#e2e8f0{% endif %};background:{% if commission.status == 'ไม่ผ่าน' %}#fff5f5{% else %}white{% endif %}">
+                    <div class="fw-bold mb-{% if commission.status == 'ไม่ผ่าน' %}2{% else %}3{% endif %}" style="font-size:.7rem;color:#4f46e5;border-bottom:1px solid #f1f5f9;padding-bottom:6px">
                         <i class="fa-solid fa-money-check-dollar me-1"></i>จัดการค่าคอมมิชชั่น
                     </div>
+                    {% if commission.status == 'ไม่ผ่าน' %}
+                    <div class="d-flex align-items-center gap-2 mb-3 px-2 py-2 rounded-2" style="background:#fee2e2;border:1px solid #fca5a5;font-size:.72rem;color:#991b1b">
+                        <i class="fa-solid fa-lock fa-sm"></i>
+                        <span>ปิดกรอกข้อมูลค่าคอม — สถานะการทดสอบเป็น <strong>ไม่ผ่าน/ยกเลิก</strong> (แก้สถานะการทดสอบด้านบนก่อน)</span>
+                    </div>
+                    <fieldset disabled style="opacity:.5">
+                    {% endif %}
                     <div class="mb-3">
                         <label class="fw-bold d-block mb-1" style="font-size:.75rem;color:#334155">ยอดรวมค่าคอมมิชชั่นทั้งหมด</label>
                         {{ comm_form.total }}
@@ -97,6 +104,9 @@
                             {{ comm_form.note }}
                         </div>
                     </div>
+                    {% if commission.status == 'ไม่ผ่าน' %}
+                    </fieldset>
+                    {% endif %}
                 </div>
 
                 <!-- Slip upload (shown only when status = จ่ายค่าคอมเรียบร้อย) -->
