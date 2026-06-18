@@ -67,8 +67,22 @@
                                     </div>
                                 </div>
                                 <div class="mb-2">
-                                    <label class="form-label fw-semibold small mb-1">ผู้รับผิดชอบ *</label>
-                                    {{ form.assignee }}
+                                    <label class="form-label fw-semibold small mb-1">ผู้รับผิดชอบ</label>
+                                    <div class="d-flex flex-wrap gap-2 p-2 rounded-2" style="border:1px solid #e2e8f0;background:#f8fafc">
+                                        {% for widget in form.assignee %}
+                                        <div class="form-check form-check-inline m-0">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="{{ widget.data.name }}"
+                                                   value="{{ widget.data.value }}"
+                                                   id="{{ widget.id_for_label }}"
+                                                   {% if widget.data.selected %}checked{% endif %}>
+                                            <label class="form-check-label fw-semibold" for="{{ widget.id_for_label }}"
+                                                   style="font-size:.85rem">{{ widget.choice_label }}</label>
+                                        </div>
+                                        {% empty %}
+                                        <span class="text-muted small">ไม่มีพนักงานกราฟฟิก</span>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                                 <div class="row g-2">
                                     <div class="col-6">

@@ -90,8 +90,18 @@
         {% endwith %}
     </td>
     <!-- ผู้รับผิดชอบ -->
-    <td class="px-3 text-center fw-semibold" style="font-size:.82rem">
-        {{ job.assignee.name|default:"-" }}
+    <td class="px-3 text-center">
+        {% with assignees=job.assignee.all %}
+        {% if assignees %}
+        <div class="d-flex flex-wrap gap-1 justify-content-center">
+            {% for emp in assignees %}
+            <span class="badge fw-semibold" style="background:#eef2ff;color:#4338ca;font-size:.72rem">{{ emp.name }}</span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <span class="text-muted" style="font-size:.82rem">-</span>
+        {% endif %}
+        {% endwith %}
     </td>
     <!-- ข้อมูลสื่ออ้างอิง -->
     <td class="px-3 text-center">

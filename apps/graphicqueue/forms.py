@@ -19,7 +19,7 @@ class GraphicJobForm(forms.ModelForm):
             "image": forms.FileInput(attrs={"class": "form-control form-control-sm", "accept": "image/*"}),
             "urgency": forms.Select(attrs={"class": "form-select fw-bold"}),
             "product_type": forms.Select(attrs={"class": "form-select"}),
-            "assignee": forms.Select(attrs={"class": "form-select fw-bold"}),
+            "assignee": forms.CheckboxSelectMultiple(),
             # format="%Y-%m-%d" prevents Thai locale from breaking <input type="date">
             "order_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}, format="%Y-%m-%d"),
             "deadline": forms.DateInput(attrs={"class": "form-control", "type": "date"}, format="%Y-%m-%d"),
@@ -33,7 +33,7 @@ class GraphicJobForm(forms.ModelForm):
         self.fields["assignee"].queryset = Employee.objects.filter(
             is_graphic=True, is_active=True
         )
-        self.fields["assignee"].empty_label = "-- เลือกผู้รับผิดชอบ --"
+        self.fields["assignee"].required = False
         self.fields["image"].required = False
         self.fields["submit_date"].required = False
         self.fields["work_url"].required = False

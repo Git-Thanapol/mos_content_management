@@ -54,7 +54,7 @@ def _apply_filters(qs, request):
         qs = qs.filter(product_type=product_type)
 
     if assignee_name != "ALL":
-        qs = qs.filter(assignee__name=assignee_name)
+        qs = qs.filter(assignee__name=assignee_name).distinct()
 
     if urgency != "ALL":
         qs = qs.filter(urgency=urgency)
@@ -97,7 +97,7 @@ def queue_list(request):
 @system_required("graphicqueue")
 def queue_table_partial(request):
     today = date.today()
-    qs = GraphicJob.objects.select_related("assignee").prefetch_related("media_types", "ref_images")
+    qs = GraphicJob.objects.prefetch_related("assignee", "media_types", "ref_images")
     qs = _apply_filters(qs, request)
     return render(request, "graphicqueue/partials/queue_rows.html", {
         "jobs": list(qs),

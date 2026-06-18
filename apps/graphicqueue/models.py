@@ -55,10 +55,8 @@ class GraphicJob(models.Model):
     urgency = models.CharField(max_length=10, choices=URGENCY_CHOICES, default=URGENCY_NORMAL, verbose_name="ประเภทงาน")
     product_type = models.CharField(max_length=20, choices=PRODUCT_TYPE_CHOICES, default=PRODUCT_TYPE_TEST, verbose_name="ประเภทสินค้า")
 
-    assignee = models.ForeignKey(
+    assignee = models.ManyToManyField(
         Employee,
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
         limit_choices_to={"is_graphic": True, "is_active": True},
         related_name="graphic_jobs",
