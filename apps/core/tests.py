@@ -150,13 +150,13 @@ class CORE12_HubCardTests(TestCase):
         self.assertEqual(r.context["systems"][0]["key"], "producttest")
 
     def test_hub_superuser_shows_all_cards(self):
-        """CORE-12c Superuser → hub shows all 3 system cards"""
+        """CORE-12c Superuser → hub shows a card for every registered system"""
         user = make_user("hub_su", superuser=True)
         c = Client()
         c.login(username="hub_su", password="testpass123")
         r = c.get("/")
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(len(r.context["systems"]), 3)
+        self.assertEqual(len(r.context["systems"]), len(SYSTEMS))
 
 
 class CORE13_AccessHelpersUnitTests(TestCase):

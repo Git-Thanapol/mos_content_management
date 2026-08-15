@@ -243,9 +243,43 @@ Each uploaded reference image has its own `brief` text field. Different from the
 |---|---|
 | `python manage.py seed_graphicqueue` | Seed 10 default media types (5 video + 5 image) |
 
+## Phase 4 — Page Manager (`apps/pagemanager/`)
+
+**Reference files:** `page_product_manager (2).html` (PageFlow mockup — page list UI), `ระบบ (2).xlsx` (post-log spreadsheet the team currently fills by hand)
+
+### Data model
+
+| Model | Key fields |
+|---|---|
+| `FacebookPage` | `page_name`, `page_id` (unique, numeric), `status` (6 fixed choices), M2M `owners` (Employee — controls visibility), `note` |
+| `PageSKU` | FK `page`, `product_code`/`product_name` (JST SKU, cached), `order` — 1 page can have many SKUs |
+| `PostMediaType` | `name` (unique), `order` — dynamic catalog, freetext-add like `graphicqueue.MediaType` |
+| `PagePost` | FK `page`, `image`, `poster` (FK Employee), `product_code`/`product_name` (JST SKU), `media_type`, `post_id` (numeric), `post_date`, `note`, `supervisor_note` |
+
+SKU fields on both `FacebookPage`/`PagePost` reuse `apps/clearance/jst.py` (`search_products`, `enrich`) — no separate JST integration code.
+
+### Row-level access (`apps/pagemanager/scoping.py`)
+Non-supervisor employees see only pages where they're listed in `owners` (resolved via `request.user.employee`, the existing `Employee.user` OneToOne). Supervisors (group `supervisor`) and superusers see everything. Every view/export filters through `visible_pages(user)` — never `FacebookPage.objects.all()` directly. `PagePost.supervisor_note` is stripped from the form, template, and Excel export for non-supervisors (three independent layers).
+
+### URLs (prefix `/pagemanager/`, namespace `pagemanager`)
+
+| URL | View |
+|---|---|
+| `pagemanager:page_list` / `page_table_partial` | Page list + stat cards, scoped by `visible_pages` |
+| `pagemanager:page_add` / `page_edit` / `page_delete` | Supervisor-only; syncs `PageSKU` + `owners` |
+| `pagemanager:jst_search` | HTMX SKU autocomplete (multi-select chips) |
+| `pagemanager:post_list` / `post_table_partial` | Posts within one page |
+| `pagemanager:post_add` / `post_edit` / `post_delete` | Post CRUD, scoped through the parent page |
+| `pagemanager:media_type_add` | HTMX POST: add new post media type |
+| `pagemanager:export_pages` / `export_all_posts` / `export_page_posts` | `.xlsx` exports via `apps/pagemanager/exports.py` (openpyxl), all scoped by `visible_pages` |
+
+### Management commands
+| Command | Purpose |
+|---|---|
+| `python manage.py seed_pagemanager` | Seed 6 default post media types from the source spreadsheet |
+
 ## Upcoming Phases
 
 | Phase | App (planned) | Purpose |
 |---|---|---|
-| 4 | TBD | TBD |
 | 5 | `apps/access` | Cross-system role & access management |

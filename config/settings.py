@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "apps.producttest",
     "apps.clearance",
     "apps.graphicqueue",
+    "apps.pagemanager",
 ]
 
 MIDDLEWARE = [

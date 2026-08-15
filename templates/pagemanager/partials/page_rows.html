@@ -1,0 +1,94 @@
+{% for page in pages %}
+<tr style="border-bottom:1px solid #f1f5f9;transition:background .15s"
+    onmouseover="this.style.background='#f8fafc'"
+    onmouseout="this.style.background=''">
+    <td class="px-3 text-muted" style="font-size:.78rem">{{ forloop.counter|stringformat:"02d" }}</td>
+    <td class="px-3" style="max-width:210px">
+        <div class="d-flex flex-wrap gap-1">
+            {% for sku in page.skus.all %}
+            <span class="sku-chip">{{ sku.product_code }}</span>
+            {% empty %}
+            <span class="text-muted" style="font-size:.72rem">-</span>
+            {% endfor %}
+        </div>
+    </td>
+    <td class="px-3 fw-bold text-dark" style="font-size:.85rem">{{ page.page_name }}</td>
+    <td class="px-3 text-center">
+        <span class="status-badge" style="{{ page.status_bg_style }}">{{ page.status }}</span>
+    </td>
+    <td class="px-3">
+        {% with owners=page.owners.all %}
+        {% if owners %}
+        <div class="d-flex flex-wrap gap-1">
+            {% for emp in owners %}
+            <span class="badge fw-semibold" style="background:#eef2ff;color:#4338ca;font-size:.7rem">{{ emp.nickname|default:emp.name }}</span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <span class="text-muted" style="font-size:.78rem">-</span>
+        {% endif %}
+        {% endwith %}
+    </td>
+    <td class="px-3 text-center">
+        <a class="btn btn-sm" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:.72rem"
+           href="{% url 'pagemanager:post_list' page.pk %}">
+            <i class="fa-regular fa-file-lines me-1 text-muted"></i>{{ page.post_count }} โพสต์
+        </a>
+    </td>
+    <td class="px-3 text-center">
+        <div class="d-flex gap-1 justify-content-center">
+            <a class="icon-btn btn btn-sm" style="color:#2f6bff;background:#eff4ff" href="{{ page.chat_url }}" target="_blank" title="เปิด Facebook Chat">
+                <i class="fa-regular fa-comment-dots"></i>
+            </a>
+            <button class="btn btn-sm btn-light" title="คัดลอกลิงก์ Chat"
+                    onclick="navigator.clipboard.writeText('{{ page.chat_url|escapejs }}').then(()=>showToast('คัดลอกแล้ว','success'))">
+                <i class="fa-regular fa-copy" style="font-size:.75rem"></i>
+            </button>
+        </div>
+    </td>
+    <td class="px-3 text-center">
+        <div class="d-flex gap-1 justify-content-center">
+            <a class="btn btn-sm text-white" style="background:#2f6bff" href="{{ page.page_url }}" target="_blank" title="เปิด Facebook Page">f</a>
+            <button class="btn btn-sm btn-light" title="คัดลอกลิงก์เพจ"
+                    onclick="navigator.clipboard.writeText('{{ page.page_url|escapejs }}').then(()=>showToast('คัดลอกแล้ว','success'))">
+                <i class="fa-regular fa-copy" style="font-size:.75rem"></i>
+            </button>
+        </div>
+    </td>
+    <td class="px-3">
+        <button class="btn btn-sm" style="background:#f6f8fb;font-size:.72rem"
+                onclick="navigator.clipboard.writeText('{{ page.page_id }}').then(()=>showToast('คัดลอกแล้ว','success'))">
+            {{ page.page_id }} <i class="fa-regular fa-copy ms-1"></i>
+        </button>
+    </td>
+    <td class="px-3 text-center">
+        {% if is_supervisor %}
+        <div class="d-flex gap-1 justify-content-center">
+            <button class="btn btn-sm btn-light"
+                    hx-get="{% url 'pagemanager:page_edit' page.pk %}"
+                    hx-target="#modal-container" hx-swap="innerHTML" title="แก้ไข">
+                <i class="fa-solid fa-pen-to-square text-primary" style="font-size:.75rem"></i>
+            </button>
+            <form method="post" action="{% url 'pagemanager:page_delete' page.pk %}" style="display:inline"
+                  hx-post="{% url 'pagemanager:page_delete' page.pk %}"
+                  hx-confirm="ลบเพจนี้ออกจากระบบ?"
+                  hx-target="#modal-container" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-light" title="ลบ">
+                    <i class="fa-solid fa-trash-can text-danger" style="font-size:.75rem"></i>
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <span class="text-muted" style="font-size:.72rem">-</span>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="10" class="text-center py-5 text-muted">
+        <i class="fa-solid fa-inbox fa-2x mb-2 d-block opacity-30"></i>
+        ไม่พบข้อมูลที่ค้นหา
+    </td>
+</tr>
+{% endfor %}

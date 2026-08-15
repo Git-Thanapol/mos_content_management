@@ -1,0 +1,113 @@
+{% extends "pagemanager/_base.html" %}
+{% block title %}โพสต์: {{ page.page_name }} — Page Manager{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="rounded-4 p-4 mb-3 text-white" style="background:#1e3a8a">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <a href="{% url 'pagemanager:page_list' %}" class="text-white-50 small text-decoration-none">
+                <i class="fa-solid fa-arrow-left me-1"></i>รายการเพจ
+            </a>
+            <h4 class="fw-bold mb-1 mt-1"><i class="fa-regular fa-file-lines me-2"></i>โพสต์ของเพจ: {{ page.page_name }}</h4>
+            <p class="mb-0 opacity-75 small">
+                ID PAGE: {{ page.page_id }} &middot;
+                <span class="status-badge" style="{{ page.status_bg_style }}">{{ page.status }}</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="card border-0 shadow-sm rounded-3 mb-3">
+    <div class="card-body py-3">
+        <form id="post-filter-form" class="row g-2 align-items-end">
+            <div class="col-6 col-sm-3 col-lg-auto">
+                <select name="poster" class="form-select form-select-sm"
+                        hx-get="{% url 'pagemanager:post_table_partial' page.pk %}"
+                        hx-target="#post-table" hx-include="#post-filter-form" hx-trigger="change">
+                    <option value="ALL" {% if current_poster == "ALL" %}selected{% endif %}>ผู้ลงโพส (ทั้งหมด)</option>
+                    {% for emp in posters %}
+                    <option value="{{ emp.pk }}" {% if current_poster == emp.pk|stringformat:"s" %}selected{% endif %}>{{ emp.nickname|default:emp.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-sm-3 col-lg-auto">
+                <select name="media_type" class="form-select form-select-sm"
+                        hx-get="{% url 'pagemanager:post_table_partial' page.pk %}"
+                        hx-target="#post-table" hx-include="#post-filter-form" hx-trigger="change">
+                    <option value="ALL" {% if current_media_type == "ALL" %}selected{% endif %}>ประเภทสื่อ (ทั้งหมด)</option>
+                    {% for mt in media_types %}
+                    <option value="{{ mt.pk }}" {% if current_media_type == mt.pk|stringformat:"s" %}selected{% endif %}>{{ mt.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-sm-3 col-lg-auto">
+                <input type="date" name="date_from" value="{{ current_date_from }}" class="form-control form-control-sm"
+                       hx-get="{% url 'pagemanager:post_table_partial' page.pk %}"
+                       hx-target="#post-table" hx-include="#post-filter-form" hx-trigger="change">
+            </div>
+            <div class="col-6 col-sm-3 col-lg-auto">
+                <input type="date" name="date_to" value="{{ current_date_to }}" class="form-control form-control-sm"
+                       hx-get="{% url 'pagemanager:post_table_partial' page.pk %}"
+                       hx-target="#post-table" hx-include="#post-filter-form" hx-trigger="change">
+            </div>
+            <div class="col-12 col-sm-6 col-lg">
+                <input type="text" name="q" value="{{ current_q }}" placeholder="ค้นหา ID POST หรือ SKU..."
+                       class="form-control form-control-sm"
+                       hx-get="{% url 'pagemanager:post_table_partial' page.pk %}"
+                       hx-target="#post-table" hx-include="#post-filter-form" hx-trigger="keyup changed delay:400ms">
+            </div>
+
+            <div class="col-12 col-sm-auto ms-sm-auto d-flex gap-2">
+                <a class="btn btn-sm btn-outline-secondary fw-bold" href="{% url 'pagemanager:export_page_posts' page.pk %}">
+                    <i class="fa-solid fa-file-excel me-1"></i>Export
+                </a>
+                <button type="button" class="btn btn-sm fw-bold text-white" style="background:#2f6bff"
+                        hx-get="{% url 'pagemanager:post_add' page.pk %}" hx-target="#modal-container" hx-swap="innerHTML">
+                    <i class="fa-solid fa-plus-circle me-1"></i>เพิ่มโพสต์
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead style="background:#f1f5f9">
+                <tr style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#475569;border-bottom:1px solid #e2e8f0">
+                    <th class="py-3 px-3" style="white-space:nowrap">ลำดับ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">รูป</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ผู้ลงโพส</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">รหัสสื่อ</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ประเภทสื่อ</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ID POST</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">วันที่ลงสื่อ</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">หมายเหตุ</th>
+                    {% if is_supervisor %}
+                    <th class="py-3 px-3" style="white-space:nowrap">หมายเหตุ (หัวหน้า)</th>
+                    {% endif %}
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="post-table"
+                   hx-get="{% url 'pagemanager:post_table_partial' page.pk %}"
+                   hx-include="#post-filter-form"
+                   hx-trigger="load, refresh"
+                   hx-swap="innerHTML">
+                <tr><td colspan="10" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Modal open/close handled globally in base.html
+</script>
+{% endblock %}

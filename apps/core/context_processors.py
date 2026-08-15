@@ -18,6 +18,8 @@ def available_systems(request):
         active = "producttest"
     elif path.startswith("/graphicqueue/"):
         active = "graphicqueue"
+    elif path.startswith("/pagemanager/"):
+        active = "pagemanager"
 
     return {
         "available_systems": systems,

@@ -46,6 +46,18 @@ SYSTEMS = [
         "url_name": "graphicqueue:queue_list",
         "group": "access_graphicqueue",
     },
+    {
+        "key": "pagemanager",
+        "name": "Page Manager",
+        "name_th": "ระบบจัดการหน้าเพจ",
+        "description": "จัดการเพจ Facebook สินค้าที่ผูกกับแต่ละเพจ และโพสต์ในเพจ",
+        "icon": "fa-flag",
+        "color": "#2f6bff",
+        "color_light": "#eff4ff",
+        "color_border": "#c7d8ff",
+        "url_name": "pagemanager:page_list",
+        "group": "access_pagemanager",
+    },
 ]
 
 

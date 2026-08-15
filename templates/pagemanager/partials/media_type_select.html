@@ -1,0 +1,6 @@
+<select name="media_type" id="id_media_type" class="form-select">
+    <option value="">-- ไม่ระบุ --</option>
+    {% for mt in media_types %}
+    <option value="{{ mt.pk }}" {% if selected == mt.pk|stringformat:"s" %}selected{% endif %}>{{ mt.name }}</option>
+    {% endfor %}
+</select>

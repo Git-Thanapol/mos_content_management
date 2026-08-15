@@ -1,0 +1,148 @@
+<div class="modal fade" id="postFormModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+
+            <div class="modal-header text-white border-0" style="background:#1e3a8a">
+                <h5 class="modal-title fw-bold mb-0">
+                    <i class="fa-regular fa-file-lines me-2"></i>
+                    {% if instance %}แก้ไขโพสต์: {{ instance.post_id }}{% else %}เพิ่มโพสต์ใหม่{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="post"
+                  enctype="multipart/form-data"
+                  action="{% if instance %}{% url 'pagemanager:post_edit' page.pk instance.pk %}{% else %}{% url 'pagemanager:post_add' page.pk %}{% endif %}"
+                  hx-post="{% if instance %}{% url 'pagemanager:post_edit' page.pk instance.pk %}{% else %}{% url 'pagemanager:post_add' page.pk %}{% endif %}"
+                  hx-target="#modal-container" hx-swap="innerHTML" hx-encoding="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="modal-body px-4 py-3">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">รูป</label>
+                            {{ form.image }}
+                            {% if instance and instance.image %}
+                            <div class="mt-1"><img src="{{ instance.image.url }}" style="height:48px;border-radius:6px;border:1px solid #e2e8f0"></div>
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">ผู้ลงโพส</label>
+                            {{ form.poster }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label fw-semibold small">รหัสสื่อ (SKU)</label>
+                        <input type="text" id="post-sku-search" class="form-control form-control-sm"
+                               placeholder="พิมพ์รหัสหรือชื่อสินค้าเพื่อค้นหาจาก JST..." autocomplete="off"
+                               value="{% if instance %}{{ instance.product_code }}{% endif %}">
+                        <div id="post-jst-results" class="border rounded bg-white shadow-sm mt-1"
+                             style="max-height:180px;overflow-y:auto;position:relative;z-index:9999;display:none"></div>
+                        {{ form.product_code }}
+                        {{ form.product_name }}
+                        {% if instance and instance.product_name %}
+                        <div class="small text-muted mt-1">เลือกแล้ว: [{{ instance.product_code }}] {{ instance.product_name }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">ประเภทสื่อ</label>
+                            <div id="media-type-wrap">
+                                {% include "pagemanager/partials/media_type_select.html" with media_types=form.fields.media_type.queryset selected=form.instance.media_type_id|stringformat:"s" %}
+                            </div>
+                            <div class="d-flex gap-2 align-items-center mt-2">
+                                <input type="text" name="new_type_name" id="new-media-type-name" class="form-control form-control-sm" placeholder="เพิ่มประเภทสื่อใหม่...">
+                                <button type="button" class="btn btn-sm fw-bold text-white" style="background:#2f6bff;white-space:nowrap"
+                                        hx-post="{% url 'pagemanager:media_type_add' %}"
+                                        hx-target="#media-type-wrap" hx-swap="innerHTML"
+                                        hx-include="[name=new_type_name],#id_media_type">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">ID POST *</label>
+                            {{ form.post_id }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-0">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">วันที่ลงสื่อ *</label>
+                            {{ form.post_date }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label fw-semibold small">หมายเหตุ (ทั่วไปเฉพาะพนักงาน)</label>
+                        {{ form.note }}
+                    </div>
+
+                    {% if is_supervisor %}
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold small">ข้อมูลหมายเหตุ เฉพาะหัวหน้า</label>
+                        {{ form.supervisor_note }}
+                    </div>
+                    {% endif %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger mt-3 py-2 small">
+                        {% for field, errors in form.errors.items %}{% for e in errors %}<div>{{ e }}</div>{% endfor %}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm fw-bold" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-sm fw-bold text-white" style="background:#2f6bff">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var searchEl = document.getElementById('post-sku-search');
+    var resultsEl = document.getElementById('post-jst-results');
+    if (!searchEl || !resultsEl) return;
+    var searchUrl = "{% url 'pagemanager:jst_search' %}";
+    var timer;
+    searchEl.addEventListener('input', function () {
+        clearTimeout(timer);
+        var q = this.value.trim();
+        if (!q) { resultsEl.innerHTML = ''; resultsEl.style.display = 'none'; return; }
+        timer = setTimeout(function () {
+            fetch(searchUrl + '?q=' + encodeURIComponent(q))
+                .then(function (r) { return r.text(); })
+                .then(function (html) {
+                    resultsEl.innerHTML = html;
+                    resultsEl.style.display = html.trim() ? 'block' : 'none';
+                });
+        }, 300);
+    });
+})();
+
+// jst_options.html links call addSku(code, name) — reuse it here to fill the single SKU field
+window.addSku = function (code, name) {
+    var codeInput = document.getElementById('id_product_code');
+    var nameInput = document.getElementById('id_product_name');
+    var searchEl = document.getElementById('post-sku-search');
+    var resultsEl = document.getElementById('post-jst-results');
+    if (codeInput) codeInput.value = code;
+    if (nameInput) nameInput.value = name;
+    if (searchEl) searchEl.value = code + ' — ' + name;
+    if (resultsEl) { resultsEl.innerHTML = ''; resultsEl.style.display = 'none'; }
+};
+
+document.body.addEventListener('htmx:afterSwap', function (e) {
+    if (e.target.id === 'media-type-wrap') {
+        var inp = document.getElementById('new-media-type-name');
+        if (inp) inp.value = '';
+    }
+});
+</script>

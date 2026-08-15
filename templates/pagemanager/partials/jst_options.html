@@ -1,0 +1,16 @@
+{% if items %}
+{% for item in items %}
+<div class="px-3 py-2 border-bottom"
+     style="cursor:pointer;font-size:.82rem;transition:background .1s"
+     onmouseover="this.style.background='#f1f5f9'"
+     onmouseout="this.style.background=''"
+     onclick="addSku('{{ item.product_code|escapejs }}', '{{ item.name|escapejs }}')">
+    <span class="fw-bold font-monospace text-primary me-2">{{ item.product_code }}</span>
+    <span class="text-muted">{{ item.name }}</span>
+</div>
+{% endfor %}
+{% elif q %}
+<div class="px-3 py-2 text-muted" style="font-size:.82rem">
+    <i class="fa-solid fa-circle-info me-1"></i>ไม่พบสินค้าที่ตรงกับ "{{ q }}"
+</div>
+{% endif %}

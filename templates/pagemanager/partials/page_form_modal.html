@@ -1,0 +1,157 @@
+<div class="modal fade" id="pageFormModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+
+            <div class="modal-header text-white border-0" style="background:#1e3a8a">
+                <h5 class="modal-title fw-bold mb-0">
+                    <i class="fa-solid fa-flag me-2"></i>
+                    {% if instance %}แก้ไขข้อมูลเพจ: {{ instance.page_name }}{% else %}เพิ่มเพจและสินค้าใหม่{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="post"
+                  action="{% if instance %}{% url 'pagemanager:page_edit' instance.pk %}{% else %}{% url 'pagemanager:page_add' %}{% endif %}"
+                  hx-post="{% if instance %}{% url 'pagemanager:page_edit' instance.pk %}{% else %}{% url 'pagemanager:page_add' %}{% endif %}"
+                  hx-target="#modal-container" hx-swap="innerHTML">
+                {% csrf_token %}
+
+                <div class="modal-body px-4 py-3">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">ชื่อเพจ *</label>
+                        {{ form.page_name }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">SKU สินค้า</label>
+                        <input type="text" id="sku-search-input" class="form-control form-control-sm"
+                               placeholder="พิมพ์รหัสหรือชื่อสินค้าเพื่อค้นหาจาก JST..." autocomplete="off">
+                        <div id="jst-results" class="border rounded bg-white shadow-sm mt-1"
+                             style="max-height:180px;overflow-y:auto;position:relative;z-index:9999;display:none"></div>
+                        <div id="sku-chips" class="d-flex flex-wrap gap-2 mt-2">
+                            {% for sku in existing_skus %}
+                            <span class="sku-chip-editable" data-code="{{ sku.product_code }}">
+                                <input type="hidden" name="sku_code" value="{{ sku.product_code }}">
+                                <input type="hidden" name="sku_name" value="{{ sku.product_name }}">
+                                <span class="fw-bold">{{ sku.product_code }}</span> {{ sku.product_name }}
+                                <button type="button" class="btn-close btn-close-sm ms-1" style="font-size:.55rem" onclick="removeSku(this)"></button>
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">ID PAGE *</label>
+                            {{ form.page_id }}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold small">สถานะ</label>
+                            {{ form.status }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label fw-semibold small">ผู้ดูแลเพจ</label>
+                        <div class="d-flex flex-wrap gap-2 p-2 rounded-2" style="border:1px solid #e2e8f0;background:#f8fafc">
+                            {% for widget in form.owners %}
+                            <div class="form-check form-check-inline m-0">
+                                <input class="form-check-input" type="checkbox"
+                                       name="{{ widget.data.name }}" value="{{ widget.data.value }}"
+                                       id="{{ widget.id_for_label }}" {% if widget.data.selected %}checked{% endif %}>
+                                <label class="form-check-label fw-semibold" for="{{ widget.id_for_label }}" style="font-size:.85rem">{{ widget.choice_label }}</label>
+                            </div>
+                            {% empty %}
+                            <span class="text-muted small">ไม่มีพนักงาน</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold small">หมายเหตุ</label>
+                        {{ form.note }}
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger mt-3 py-2 small">
+                        {% for field, errors in form.errors.items %}{% for e in errors %}<div>{{ e }}</div>{% endfor %}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm fw-bold" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-sm fw-bold text-white" style="background:#2f6bff">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.sku-chip-editable {
+    display:inline-flex;align-items:center;gap:4px;padding:4px 8px;
+    border:1px solid #dce7ff;border-radius:7px;background:#f2f6ff;color:#3e66ce;font-size:.75rem;
+}
+</style>
+<script>
+(function () {
+    var searchEl = document.getElementById('sku-search-input');
+    var resultsEl = document.getElementById('jst-results');
+    if (!searchEl || !resultsEl) return;
+    var searchUrl = "{% url 'pagemanager:jst_search' %}";
+    var timer;
+    searchEl.addEventListener('input', function () {
+        clearTimeout(timer);
+        var q = this.value.trim();
+        if (!q) { resultsEl.innerHTML = ''; resultsEl.style.display = 'none'; return; }
+        timer = setTimeout(function () {
+            fetch(searchUrl + '?q=' + encodeURIComponent(q))
+                .then(function (r) { return r.text(); })
+                .then(function (html) {
+                    resultsEl.innerHTML = html;
+                    resultsEl.style.display = html.trim() ? 'block' : 'none';
+                });
+        }, 300);
+    });
+})();
+
+window.addSku = function (code, name) {
+    var container = document.getElementById('sku-chips');
+    if (container.querySelector('[data-code="' + CSS.escape(code) + '"]')) return;
+
+    var chip = document.createElement('span');
+    chip.className = 'sku-chip-editable';
+    chip.dataset.code = code;
+
+    var codeInput = document.createElement('input');
+    codeInput.type = 'hidden'; codeInput.name = 'sku_code'; codeInput.value = code;
+    var nameInput = document.createElement('input');
+    nameInput.type = 'hidden'; nameInput.name = 'sku_name'; nameInput.value = name;
+
+    var codeLabel = document.createElement('span');
+    codeLabel.className = 'fw-bold'; codeLabel.textContent = code;
+    var nameLabel = document.createElement('span');
+    nameLabel.className = 'sku-name'; nameLabel.textContent = ' ' + name;
+
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'btn-close btn-close-sm ms-1';
+    removeBtn.style.fontSize = '.55rem';
+    removeBtn.onclick = function () { removeSku(removeBtn); };
+
+    chip.append(codeInput, nameInput, codeLabel, nameLabel, removeBtn);
+    container.appendChild(chip);
+
+    var resultsEl = document.getElementById('jst-results');
+    var searchEl = document.getElementById('sku-search-input');
+    resultsEl.innerHTML = ''; resultsEl.style.display = 'none';
+    searchEl.value = '';
+};
+
+window.removeSku = function (btn) {
+    btn.closest('.sku-chip-editable').remove();
+};
+</script>

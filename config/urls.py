@@ -10,6 +10,7 @@ urlpatterns = [
     path("producttest/", include("apps.producttest.urls")),
     path("clearance/", include("apps.clearance.urls")),
     path("graphicqueue/", include("apps.graphicqueue.urls")),
+    path("pagemanager/", include("apps.pagemanager.urls")),
     # Hub at root (must be last — catches "" after the above)
     path("", include("apps.core.urls")),
 ]

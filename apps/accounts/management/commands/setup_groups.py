@@ -10,6 +10,7 @@ GROUPS = [
     "access_producttest",
     "access_clearance",
     "access_graphicqueue",
+    "access_pagemanager",
 ]
 
 

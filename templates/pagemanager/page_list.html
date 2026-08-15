@@ -1,0 +1,128 @@
+{% extends "pagemanager/_base.html" %}
+{% block title %}Page Manager — ระบบจัดการหน้าเพจ{% endblock %}
+
+{% block extra_head %}
+<style>
+.sku-chip { padding:2px 7px;border:1px solid #dce7ff;border-radius:7px;background:#f2f6ff;color:#3e66ce;font-size:.68rem;font-weight:700;display:inline-block;margin:1px }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="rounded-4 p-4 mb-3 text-white" style="background:#1e3a8a">
+    <h4 class="fw-bold mb-1"><i class="fa-solid fa-flag me-2"></i>Page Manager</h4>
+    <p class="mb-0 opacity-75 small">ระบบจัดการหน้าเพจ Facebook และสินค้าที่ผูกกับแต่ละเพจ</p>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-3">
+    {% for label,key,color,icon,val in stat_cards %}
+    <div class="col-6 col-lg">
+        <div class="stat-card p-3 text-white {{ color }} {% if current_status == key %}active{% endif %}"
+             onclick="setActiveCard(this, '{{ key }}')">
+            <div class="d-flex justify-content-between align-items-start">
+                <small class="text-uppercase fw-bold opacity-75" style="font-size:.6rem">{{ label }}</small>
+                <i class="fa-solid {{ icon }} opacity-25"></i>
+            </div>
+            <div class="display-6 fw-bold mt-1">{{ val }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Filter bar -->
+<div class="card border-0 shadow-sm rounded-3 mb-3">
+    <div class="card-body py-3">
+        <form id="page-filter-form" class="row g-2 align-items-end">
+            <input type="hidden" name="status" id="hidden-status" value="{{ current_status }}">
+
+            <div class="col-12 col-sm-4">
+                <label class="form-label fw-semibold small mb-1" style="font-size:.7rem">ค้นหาชื่อ SKU</label>
+                <input type="text" name="sku" value="{{ current_sku }}" placeholder="เช่น SP001"
+                       class="form-control form-control-sm"
+                       hx-get="{% url 'pagemanager:page_table_partial' %}"
+                       hx-target="#page-table" hx-include="#page-filter-form"
+                       hx-trigger="keyup changed delay:400ms">
+            </div>
+            <div class="col-12 col-sm-4">
+                <label class="form-label fw-semibold small mb-1" style="font-size:.7rem">ค้นหาชื่อเพจ</label>
+                <input type="text" name="page_name" value="{{ current_page_name }}" placeholder="พิมพ์ชื่อเพจ..."
+                       class="form-control form-control-sm"
+                       hx-get="{% url 'pagemanager:page_table_partial' %}"
+                       hx-target="#page-table" hx-include="#page-filter-form"
+                       hx-trigger="keyup changed delay:400ms">
+            </div>
+            <div class="col-12 col-sm-4">
+                <label class="form-label fw-semibold small mb-1" style="font-size:.7rem">ค้นหาลิงก์ / ID Page</label>
+                <input type="text" name="page_id" value="{{ current_page_id }}" inputmode="numeric" placeholder="กรอกตัวเลข ID"
+                       class="form-control form-control-sm"
+                       hx-get="{% url 'pagemanager:page_table_partial' %}"
+                       hx-target="#page-table" hx-include="#page-filter-form"
+                       hx-trigger="keyup changed delay:400ms">
+            </div>
+
+            <div class="col-12 d-flex gap-2 justify-content-end mt-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary fw-bold" onclick="exportPages()">
+                    <i class="fa-solid fa-file-excel me-1"></i>Export รายการเพจ
+                </button>
+                <a class="btn btn-sm btn-outline-secondary fw-bold" href="{% url 'pagemanager:export_all_posts' %}">
+                    <i class="fa-solid fa-file-excel me-1"></i>Export โพสต์ทุกเพจ
+                </a>
+                {% if is_supervisor %}
+                <button type="button" class="btn btn-sm fw-bold text-white" style="background:#2f6bff"
+                        hx-get="{% url 'pagemanager:page_add' %}" hx-target="#modal-container" hx-swap="innerHTML">
+                    <i class="fa-solid fa-plus-circle me-1"></i>เพิ่มเพจและสินค้าใหม่
+                </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead style="background:#f1f5f9">
+                <tr style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#475569;border-bottom:1px solid #e2e8f0">
+                    <th class="py-3 px-3" style="white-space:nowrap">No.</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">SKU</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ชื่อเพจ</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">Status</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ผู้ดูแล</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">โพสต์</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">Facebook Chat</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">Link Page</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">ID Page</th>
+                    <th class="py-3 px-3 text-center" style="white-space:nowrap">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="page-table"
+                   hx-get="{% url 'pagemanager:page_table_partial' %}"
+                   hx-include="#page-filter-form"
+                   hx-trigger="load, refresh"
+                   hx-swap="innerHTML">
+                <tr><td colspan="10" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function setActiveCard(el, status) {
+    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('hidden-status').value = status;
+    htmx.trigger('#page-table', 'refresh');
+}
+function exportPages() {
+    const form = document.getElementById('page-filter-form');
+    const params = new URLSearchParams(new FormData(form));
+    window.location.href = "{% url 'pagemanager:export_pages' %}?" + params.toString();
+}
+</script>
+{% endblock %}
