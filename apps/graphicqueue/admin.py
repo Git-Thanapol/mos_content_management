@@ -19,8 +19,12 @@ class MediaTypeAdmin(admin.ModelAdmin):
 
 @admin.register(GraphicJob)
 class GraphicJobAdmin(admin.ModelAdmin):
-    list_display = ("sku", "name", "status", "urgency", "assignee", "order_date", "deadline")
+    list_display = ("sku", "name", "status", "urgency", "get_assignees", "order_date", "deadline")
     list_filter = ("status", "urgency", "product_type")
     search_fields = ("sku", "name")
-    filter_horizontal = ("media_types",)
+    filter_horizontal = ("media_types", "assignee")
     inlines = [RefImageInline]
+
+    @admin.display(description="Assignee")
+    def get_assignees(self, obj):
+        return ", ".join(e.name for e in obj.assignee.all())
