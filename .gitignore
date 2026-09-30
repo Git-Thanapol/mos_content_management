@@ -12,3 +12,4 @@ uploads/
 staticfiles/
 *.sqlite3
 .DS_Store
+addition_work/
