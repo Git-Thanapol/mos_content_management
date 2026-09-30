@@ -289,3 +289,71 @@ class PM21_LoginLinkedPickerTests(TestCase):
         from apps.pagemanager.forms import PagePostForm
         field = PagePostForm().fields["poster"]
         self.assertEqual(field.label_from_instance(self.with_nickname), "เล็ก")
+
+
+class PM22_CategoryAdsStockTests(TestCase):
+    """Category / monthly ADS / STOCK features and their access scoping."""
+
+    def setUp(self):
+        from apps.pagemanager.models import PageCategory
+        self.PageCategory = PageCategory
+        self.emp_a = make_employee("Admin A")
+        self.emp_b = make_employee("Admin B")
+        self.user_a = make_user("pm22_a", groups=["access_pagemanager"])
+        self.emp_a.user = self.user_a
+        self.emp_a.save()
+        self.sup = make_user("pm22_sup", groups=["access_pagemanager", "supervisor"])
+        self.own = make_page("Own", "310001", owners=[self.emp_a])
+        self.other = make_page("Other", "310002", owners=[self.emp_b])
+        self.c = Client()
+        self.c.login(username="pm22_a", password="testpass123")
+
+    def test_owner_sets_category_on_own_page_only(self):
+        """PM-22 owner can set category on own page, 404 on others'"""
+        cat = self.PageCategory.objects.create(name="ความงาม")
+        r = self.c.post(f"/pagemanager/{self.own.pk}/category/", {"category": cat.pk})
+        self.assertEqual(r.status_code, 200)
+        self.own.refresh_from_db()
+        self.assertEqual(self.own.category, cat)
+        self.assertEqual(self.c.post(f"/pagemanager/{self.other.pk}/category/", {"category": cat.pk}).status_code, 404)
+
+    def test_category_manage_supervisor_only(self):
+        """PM-23 category add is supervisor-only; deleting a used category nulls the page"""
+        self.assertEqual(self.c.post("/pagemanager/htmx/categories/add/", {"name": "X"}).status_code, 302)
+        self.assertFalse(self.PageCategory.objects.exists())
+        s = Client()
+        s.login(username="pm22_sup", password="testpass123")
+        s.post("/pagemanager/htmx/categories/add/", {"name": "X"})
+        cat = self.PageCategory.objects.get(name="X")
+        self.own.category = cat
+        self.own.save()
+        s.post(f"/pagemanager/htmx/categories/{cat.pk}/delete/")
+        self.own.refresh_from_db()
+        self.assertIsNone(self.own.category)
+
+    def test_ads_upsert_and_hero_total(self):
+        """PM-24 monthly ADS upsert per month; hero total header sums visible pages"""
+        from decimal import Decimal
+        from apps.pagemanager.models import PageAds
+        self.c.post(f"/pagemanager/{self.own.pk}/ads/save/", {"month": "2026-09", "amount": "100.50"})
+        self.c.post(f"/pagemanager/{self.own.pk}/ads/save/", {"month": "2026-09", "amount": "200"})
+        self.c.post(f"/pagemanager/{self.own.pk}/ads/save/", {"month": "2026-10", "amount": "50"})
+        self.assertEqual(PageAds.objects.filter(page=self.own).count(), 2)
+        PageAds.objects.create(page=self.other, month="2026-09-01", amount=Decimal("999"))
+        r = self.c.get("/pagemanager/htmx/rows/")
+        self.assertIn("250.00", r["HX-Trigger"])
+        self.assertNotIn("999", r["HX-Trigger"])
+        self.assertEqual(self.c.post(f"/pagemanager/{self.own.pk}/ads/save/", {"month": "bad", "amount": "1"}).status_code, 400)
+        self.assertEqual(self.c.post(f"/pagemanager/{self.other.pk}/ads/save/", {"month": "2026-09", "amount": "1"}).status_code, 404)
+
+    def test_stock_rows_kept_when_sku_removed(self):
+        """PM-25 stock rows survive removal of the SKU from the page; scoped to owner"""
+        from apps.pagemanager.models import PageStockItem
+        PageSKU.objects.create(page=self.own, product_code="SP001")
+        self.c.post(f"/pagemanager/{self.own.pk}/stock/add/", {"product_code": "SP001"})
+        self.own.skus.all().delete()
+        r = self.c.get(f"/pagemanager/{self.own.pk}/stock/htmx/body/")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(PageStockItem.objects.filter(page=self.own).count(), 1)
+        self.assertContains(r, "SP001")
+        self.assertEqual(self.c.get(f"/pagemanager/{self.other.pk}/stock/htmx/body/").status_code, 404)

@@ -25,8 +25,11 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">SKU สินค้า</label>
-                        <input type="text" id="sku-search-input" class="form-control form-control-sm"
-                               placeholder="พิมพ์รหัสหรือชื่อสินค้าเพื่อค้นหาจาก JST..." autocomplete="off">
+                        <div class="d-flex gap-2">
+                            <input type="text" id="sku-search-input" class="form-control form-control-sm"
+                                   placeholder="กรอก SKU แล้วกด Enter / เพิ่ม (หรือพิมพ์เพื่อค้นหาจาก JST)" autocomplete="off">
+                            <button type="button" class="btn btn-sm btn-outline-primary fw-bold text-nowrap" onclick="addTypedSku()">＋ เพิ่ม</button>
+                        </div>
                         <div id="jst-results" class="border rounded bg-white shadow-sm mt-1"
                              style="max-height:180px;overflow-y:auto;position:relative;z-index:9999;display:none"></div>
                         <div id="sku-chips" class="d-flex flex-wrap gap-2 mt-2">
@@ -104,6 +107,9 @@
     if (!searchEl || !resultsEl) return;
     var searchUrl = "{% url 'pagemanager:jst_search' %}";
     var timer;
+    searchEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); window.addTypedSku(); }
+    });
     searchEl.addEventListener('input', function () {
         clearTimeout(timer);
         var q = this.value.trim();
@@ -149,6 +155,12 @@ window.addSku = function (code, name) {
     var searchEl = document.getElementById('sku-search-input');
     resultsEl.innerHTML = ''; resultsEl.style.display = 'none';
     searchEl.value = '';
+};
+
+window.addTypedSku = function () {
+    var searchEl = document.getElementById('sku-search-input');
+    var code = searchEl.value.trim();
+    if (code) window.addSku(code, '');  // free-typed SKU; name is resolved from JST on save when it matches
 };
 
 window.removeSku = function (btn) {

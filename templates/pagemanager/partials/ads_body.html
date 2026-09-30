@@ -1,0 +1,34 @@
+<form class="row g-2 align-items-end mb-3"
+      hx-post="{% url 'pagemanager:ads_save' page.pk %}" hx-target="#ads-body" hx-swap="innerHTML">
+    <div class="col-5">
+        <label class="form-label small fw-semibold mb-1">เดือน</label>
+        <input type="month" name="month" value="{{ default_month }}" class="form-control form-control-sm" required>
+    </div>
+    <div class="col-5">
+        <label class="form-label small fw-semibold mb-1">ADS (฿)</label>
+        <input type="number" name="amount" min="0" step="0.01" class="form-control form-control-sm text-end" placeholder="0.00" required>
+    </div>
+    <div class="col-2">
+        <button type="submit" class="btn btn-sm btn-primary fw-bold w-100">บันทึก</button>
+    </div>
+    <div class="form-text">เดือนที่มีข้อมูลอยู่แล้วจะถูกแทนที่ด้วยค่าใหม่</div>
+</form>
+<table class="table table-sm mb-2">
+    <thead><tr class="small text-muted"><th>เดือน</th><th class="text-end">ADS (฿)</th><th></th></tr></thead>
+    <tbody>
+        {% for a in ads %}
+        <tr>
+            <td>{{ a.month|date:"m/Y" }}</td>
+            <td class="text-end fw-semibold">{{ a.amount|floatformat:2 }}</td>
+            <td class="text-end">
+                <button type="button" class="btn btn-sm btn-light text-danger"
+                        hx-post="{% url 'pagemanager:ads_delete' page.pk a.pk %}" hx-target="#ads-body" hx-swap="innerHTML"
+                        hx-confirm="ลบข้อมูลเดือนนี้?"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="text-center text-muted py-3">ยังไม่มีข้อมูล ADS</td></tr>
+        {% endfor %}
+    </tbody>
+    <tfoot><tr class="fw-bold"><td>รวมทั้งหมด</td><td class="text-end">฿{{ ads_total|floatformat:2 }}</td><td></td></tr></tfoot>
+</table>

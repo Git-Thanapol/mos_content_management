@@ -28,7 +28,7 @@
         <div class="d-flex align-items-center gap-1">
             <a class="fw-bold font-monospace" style="font-size:.78rem" href="{{ post.post_url }}" target="_blank">{{ post.post_id }}</a>
             <button class="btn btn-sm btn-light" style="padding:.1rem .3rem"
-                    onclick="navigator.clipboard.writeText('{{ post.post_url|escapejs }}').then(()=>showToast('คัดลอกแล้ว','success'))">
+                    onclick="copyText('{{ post.post_url|escapejs }}')">
                 <i class="fa-regular fa-copy" style="font-size:.68rem"></i>
             </button>
         </div>

@@ -1,0 +1,54 @@
+<div class="row g-3 mb-3">
+    <div class="col-4"><div class="card border-0 shadow-sm p-3"><div class="small fw-bold text-muted">รายการ STOCK</div><div class="fs-3 fw-bold">{{ rows|length }}</div></div></div>
+    <div class="col-4"><div class="card border-0 shadow-sm p-3"><div class="small fw-bold text-muted">จำนวนสินค้ารวม</div><div class="fs-3 fw-bold">{{ total_qty|default_if_none:"-" }}</div></div></div>
+    <div class="col-4"><div class="card border-0 shadow-sm p-3"><div class="small fw-bold text-muted">SKU ที่ไม่ซ้ำ</div><div class="fs-3 fw-bold">{{ unique_skus }}</div></div></div>
+</div>
+<div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center fw-bold">
+        รายการ STOCK
+        <form class="d-flex gap-2" hx-post="{% url 'pagemanager:stock_add' page.pk %}" hx-target="#stock-body" hx-swap="innerHTML">
+            <input type="text" name="product_code" list="sku-options" class="form-control form-control-sm" style="width:200px"
+                   placeholder="เลือก/กรอก SKU" required autocomplete="off">
+            <datalist id="sku-options">{% for s in sku_options %}<option value="{{ s }}">{% endfor %}</datalist>
+            <button type="submit" class="btn btn-sm btn-primary fw-bold text-nowrap">＋ เพิ่มรายการ</button>
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead style="background:#f1f5f9"><tr class="small text-uppercase">
+                <th class="px-3" style="width:60px">No.</th><th class="px-3" style="width:260px">SKU</th>
+                <th class="px-3 text-center" style="width:140px">จำนวน (JST)</th><th class="px-3">หมายเหตุ</th>
+                <th class="px-3 text-center" style="width:80px">ลบ</th>
+            </tr></thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td class="px-3 text-muted">{{ forloop.counter|stringformat:"02d" }}</td>
+                    <td class="px-3">
+                        <select name="product_code" class="form-select form-select-sm"
+                                hx-post="{% url 'pagemanager:stock_update' page.pk r.item.pk %}" hx-trigger="change"
+                                hx-target="#stock-body" hx-swap="innerHTML">
+                            {% for s in sku_options %}<option value="{{ s }}" {% if s == r.item.product_code %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                        </select>
+                    </td>
+                    <td class="px-3 text-center fw-bold">{{ r.stock }}</td>
+                    <td class="px-3">
+                        <input type="text" name="note" value="{{ r.item.note }}" maxlength="255" placeholder="หมายเหตุ"
+                               class="form-control form-control-sm"
+                               hx-post="{% url 'pagemanager:stock_update' page.pk r.item.pk %}" hx-trigger="change"
+                               hx-target="#stock-body" hx-swap="innerHTML">
+                    </td>
+                    <td class="px-3 text-center">
+                        <button class="btn btn-sm btn-light text-danger" hx-post="{% url 'pagemanager:stock_delete' page.pk r.item.pk %}"
+                                hx-target="#stock-body" hx-swap="innerHTML" hx-confirm="ลบรายการนี้?">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-5">ไม่มีรายการสินค้า กรุณากด "เพิ่มรายการ"</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

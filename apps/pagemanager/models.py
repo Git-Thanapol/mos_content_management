@@ -6,6 +6,19 @@ from apps.producttest.models import Employee
 numeric_id_validator = RegexValidator(r"^\d+$", "กรอกเฉพาะตัวเลขเท่านั้น")
 
 
+class PageCategory(models.Model):
+    name = models.CharField(max_length=80, unique=True, verbose_name="ชื่อหมวดหมู่")
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+        verbose_name = "หมวดหมู่เพจ"
+        verbose_name_plural = "หมวดหมู่เพจ"
+
+    def __str__(self):
+        return self.name
+
+
 class FacebookPage(models.Model):
     STATUS_NEW = "เพิ่มใหม่"
     STATUS_ACTIVE = "Active ADS"
@@ -38,6 +51,10 @@ class FacebookPage(models.Model):
         blank=True,
         related_name="managed_pages",
         verbose_name="ผู้ดูแลเพจ",
+    )
+    category = models.ForeignKey(
+        PageCategory, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="pages", verbose_name="หมวดหมู่",
     )
     note = models.TextField(blank=True, verbose_name="หมายเหตุ")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -80,6 +97,42 @@ class PageSKU(models.Model):
     class Meta:
         ordering = ["order", "id"]
         unique_together = ("page", "product_code")
+
+    def __str__(self):
+        return f"{self.page.page_name}: {self.product_code}"
+
+
+class PageAds(models.Model):
+    """Monthly ADS spend for a page. `month` is always the 1st of the month."""
+    page = models.ForeignKey(FacebookPage, on_delete=models.CASCADE, related_name="ads")
+    month = models.DateField(verbose_name="เดือน")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="ADS (฿)")
+
+    class Meta:
+        ordering = ["-month"]
+        unique_together = ("page", "month")
+        verbose_name = "ADS รายเดือน"
+        verbose_name_plural = "ADS รายเดือน"
+
+    def __str__(self):
+        return f"{self.page.page_name} {self.month:%Y-%m}: {self.amount}"
+
+
+class PageStockItem(models.Model):
+    """A SKU row in a page's STOCK sub-page. Quantity is read live from JST.
+
+    product_code is plain text (not FK to PageSKU) so rows survive when the
+    SKU is later removed from the page.
+    """
+    page = models.ForeignKey(FacebookPage, on_delete=models.CASCADE, related_name="stock_items")
+    product_code = models.CharField(max_length=100, verbose_name="SKU")
+    note = models.CharField(max_length=255, blank=True, verbose_name="หมายเหตุ")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "รายการ STOCK"
+        verbose_name_plural = "รายการ STOCK"
 
     def __str__(self):
         return f"{self.page.page_name}: {self.product_code}"

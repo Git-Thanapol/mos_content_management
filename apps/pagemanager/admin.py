@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import FacebookPage, PagePost, PageSKU, PostMediaType
+from .models import FacebookPage, PageAds, PageCategory, PagePost, PageSKU, PageStockItem, PostMediaType
 
 
 class PageSKUInline(admin.TabularInline):
@@ -33,3 +33,12 @@ class FacebookPageAdmin(admin.ModelAdmin):
 class PostMediaTypeAdmin(admin.ModelAdmin):
     list_display = ("name", "order")
     ordering = ("order",)
+
+
+@admin.register(PageCategory)
+class PageCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "order")
+
+
+admin.site.register(PageAds)
+admin.site.register(PageStockItem)

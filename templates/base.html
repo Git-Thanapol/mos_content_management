@@ -26,7 +26,7 @@
     </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
 <!-- ── Top navbar (system-agnostic) ───────────────────────────────────────── -->
 <nav class="navbar navbar-dark bg-dark sticky-top shadow-sm px-3">
@@ -100,6 +100,28 @@ function showToast(msg, type='success') {
     document.getElementById('toast-container').insertAdjacentHTML('beforeend', html);
     const el = document.getElementById(id);
     setTimeout(() => { el && el.remove(); }, 3500);
+}
+
+// Clipboard copy that also works on plain-http origins (navigator.clipboard needs a secure context)
+function copyText(text, msg) {
+    msg = msg || 'คัดลอกแล้ว';
+    const done = () => showToast(msg, 'success');
+    const fallback = () => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        let ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        ta.remove();
+        ok ? done() : showToast('คัดลอกไม่สำเร็จ', 'error');
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+        fallback();
+    }
 }
 
 function closeAllModals() {

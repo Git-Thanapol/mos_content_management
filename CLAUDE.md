@@ -254,6 +254,9 @@ Each uploaded reference image has its own `brief` text field. Different from the
 | `FacebookPage` | `page_name`, `page_id` (unique, numeric), `status` (6 fixed choices), M2M `owners` (Employee — controls visibility), `note` |
 | `PageSKU` | FK `page`, `product_code`/`product_name` (JST SKU, cached), `order` — 1 page can have many SKUs |
 | `PostMediaType` | `name` (unique), `order` — dynamic catalog, freetext-add like `graphicqueue.MediaType` |
+| `PageCategory` | `name` (unique), `order` — supervisor-managed; `FacebookPage.category` FK is `SET_NULL` (null = "ไม่ระบุ") |
+| `PageAds` | FK `page`, `month` (1st of month), `amount` — unique per (page, month); ADS column = sum, edited in a monthly modal |
+| `PageStockItem` | FK `page`, `product_code` (plain text, survives SKU removal), `note` — quantity is read live from JST via `enrich()`, never stored |
 | `PagePost` | FK `page`, `image`, `poster` (FK Employee), `product_code`/`product_name` (JST SKU), `media_type`, `post_id` (numeric), `post_date`, `note`, `supervisor_note` |
 
 SKU fields on both `FacebookPage`/`PagePost` reuse `apps/clearance/jst.py` (`search_products`, `enrich`) — no separate JST integration code.
@@ -270,8 +273,13 @@ Non-supervisor employees see only pages where they're listed in `owners` (resolv
 | `pagemanager:jst_search` | HTMX SKU autocomplete (multi-select chips) |
 | `pagemanager:post_list` / `post_table_partial` | Posts within one page |
 | `pagemanager:post_add` / `post_edit` / `post_delete` | Post CRUD, scoped through the parent page |
+| `pagemanager:category_modal` / `category_add` / `category_delete` | Supervisor-only category settings |
+| `pagemanager:page_category_set` / `ads_modal` / `ads_save` / `ads_delete` | Owner-scoped inline category + monthly ADS |
+| `pagemanager:stock_list` / `stock_body` / `stock_add` / `stock_update` / `stock_delete` | STOCK sub-page, owner-scoped |
 | `pagemanager:media_type_add` | HTMX POST: add new post media type |
 | `pagemanager:export_pages` / `export_all_posts` / `export_page_posts` | `.xlsx` exports via `apps/pagemanager/exports.py` (openpyxl), all scoped by `visible_pages` |
+
+SKUs on a page are free-typed (Enter/เพิ่ม) with optional JST search; the hero "ยอดรวม ADS" follows the visible + filtered pages (sent via the `HX-Trigger: ads-total` header from `page_table_partial`). Use `copyText()` from `base.html` for clipboard buttons — `navigator.clipboard` fails on non-HTTPS origins.
 
 ### Management commands
 | Command | Purpose |

@@ -10,8 +10,16 @@
 {% block content %}
 <!-- Header -->
 <div class="rounded-4 p-4 mb-3 text-white" style="background:#1e3a8a">
-    <h4 class="fw-bold mb-1"><i class="fa-solid fa-flag me-2"></i>Page Manager</h4>
-    <p class="mb-0 opacity-75 small">ระบบจัดการหน้าเพจ Facebook และสินค้าที่ผูกกับแต่ละเพจ</p>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="fa-solid fa-flag me-2"></i>Page Manager</h4>
+            <p class="mb-0 opacity-75 small">ระบบจัดการหน้าเพจ Facebook และสินค้าที่ผูกกับแต่ละเพจ</p>
+        </div>
+        <div class="rounded-3 px-4 py-2 text-end" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)">
+            <div class="fw-semibold opacity-75" style="font-size:.7rem">ยอดรวม ADS ทั้งหมด</div>
+            <div class="fw-bold" style="font-size:1.6rem;line-height:1.2" id="ads-grand-total">฿0.00</div>
+        </div>
+    </div>
 </div>
 
 <!-- Stat cards -->
@@ -69,6 +77,10 @@
                     <i class="fa-solid fa-file-excel me-1"></i>Export โพสต์ทุกเพจ
                 </a>
                 {% if is_supervisor %}
+                <button type="button" class="btn btn-sm btn-outline-secondary fw-bold"
+                        hx-get="{% url 'pagemanager:category_modal' %}" hx-target="#modal-container" hx-swap="innerHTML">
+                    <i class="fa-solid fa-gear me-1"></i>ตั้งค่าหมวดหมู่
+                </button>
                 <button type="button" class="btn btn-sm fw-bold text-white" style="background:#2f6bff"
                         hx-get="{% url 'pagemanager:page_add' %}" hx-target="#modal-container" hx-swap="innerHTML">
                     <i class="fa-solid fa-plus-circle me-1"></i>เพิ่มเพจและสินค้าใหม่
@@ -89,26 +101,38 @@
                     <th class="py-3 px-3" style="white-space:nowrap">SKU</th>
                     <th class="py-3 px-3" style="white-space:nowrap">ชื่อเพจ</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">Status</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">STOCK</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">หมวดหมู่</th>
                     <th class="py-3 px-3" style="white-space:nowrap">ผู้ดูแล</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">โพสต์</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">Facebook Chat</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">Link Page</th>
                     <th class="py-3 px-3" style="white-space:nowrap">ID Page</th>
+                    <th class="py-3 px-3 text-end" style="white-space:nowrap">ADS</th>
+                    <th class="py-3 px-3" style="white-space:nowrap">หมายเหตุ</th>
                     <th class="py-3 px-3 text-center" style="white-space:nowrap">จัดการ</th>
                 </tr>
             </thead>
             <tbody id="page-table"
                    hx-get="{% url 'pagemanager:page_table_partial' %}"
                    hx-include="#page-filter-form"
-                   hx-trigger="load, refresh"
+                   hx-trigger="load, refresh, pages-changed from:body"
                    hx-swap="innerHTML">
-                <tr><td colspan="10" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
+                <tr><td colspan="14" class="text-center py-4 text-muted">กำลังโหลด...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
 <div id="modal-container"></div>
+
+<div class="modal fade" id="noteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0">
+        <div class="modal-header"><h6 class="modal-title fw-bold">หมายเหตุ: <span id="note-page"></span></h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="note-full" style="white-space:pre-wrap"></div>
+    </div></div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -118,6 +142,14 @@ function setActiveCard(el, status) {
     el.classList.add('active');
     document.getElementById('hidden-status').value = status;
     htmx.trigger('#page-table', 'refresh');
+}
+document.body.addEventListener('ads-total', function (e) {
+    document.getElementById('ads-grand-total').textContent = e.detail.value;
+});
+function openNote(btn) {
+    document.getElementById('note-full').textContent = btn.dataset.note;
+    document.getElementById('note-page').textContent = btn.dataset.page;
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('noteModal')).show();
 }
 function exportPages() {
     const form = document.getElementById('page-filter-form');

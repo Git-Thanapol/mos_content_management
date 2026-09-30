@@ -98,17 +98,28 @@ def export_all_posts(request):
 
 @system_required("pagemanager")
 def export_pages(request):
-    qs = _apply_page_filters(visible_pages(request.user).prefetch_related("skus", "owners"), request)
+    qs = _apply_page_filters(
+        visible_pages(request.user).select_related("category").prefetch_related("skus", "owners", "ads"),
+        request,
+    )
 
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "เพจ"
-    ws.append(["No.", "SKU", "ชื่อเพจ", "สถานะ", "ผู้ดูแล", "ID PAGE", "Link Page", "Facebook Chat"])
+    ws.append([
+        "No.", "SKU", "ชื่อเพจ", "สถานะ", "หมวดหมู่", "ผู้ดูแล", "ID PAGE",
+        "Link Page", "Facebook Chat", "ADS รวม (฿)", "หมายเหตุ",
+    ])
 
     for i, page in enumerate(qs, start=1):
         skus = ", ".join(s.product_code for s in page.skus.all())
         owners = ", ".join(o.name for o in page.owners.all())
-        ws.append([i, skus, page.page_name, page.status, owners, page.page_id, page.page_url, page.chat_url])
+        ads_total = float(sum(a.amount for a in page.ads.all()))
+        ws.append([
+            i, skus, page.page_name, page.status,
+            page.category.name if page.category else "ไม่ระบุ",
+            owners, page.page_id, page.page_url, page.chat_url, ads_total, page.note,
+        ])
 
     _autosize(ws)
     return _xlsx_response(wb, "รายการเพจ.xlsx")

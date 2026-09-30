@@ -1,0 +1,19 @@
+<form class="d-flex gap-2 mb-3"
+      hx-post="{% url 'pagemanager:category_add' %}" hx-target="#category-body" hx-swap="innerHTML">
+    <input type="text" name="name" class="form-control form-control-sm" placeholder="เพิ่มหมวดหมู่ใหม่..." maxlength="80" required>
+    <button type="submit" class="btn btn-sm btn-primary fw-bold text-nowrap">เพิ่ม</button>
+</form>
+<div class="border rounded-2" style="max-height:260px;overflow-y:auto">
+    {% for c in categories %}
+    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+        <span class="fw-semibold" style="font-size:.85rem">{{ c.name }} <small class="text-muted">({{ c.n }} เพจ)</small></span>
+        <button type="button" class="btn btn-sm btn-light text-danger"
+                hx-post="{% url 'pagemanager:category_delete' c.pk %}" hx-target="#category-body" hx-swap="innerHTML"
+                hx-confirm="ลบหมวดหมู่ &quot;{{ c.name }}&quot;? เพจที่ใช้อยู่จะกลายเป็น ไม่ระบุ">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    {% empty %}
+    <div class="text-center text-muted py-4 small">ยังไม่มีหมวดหมู่</div>
+    {% endfor %}
+</div>
